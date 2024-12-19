@@ -6,6 +6,16 @@ info:
     or in groups, all from the convenience of your PC. Enjoy seamless conversations with text, emojis, or GIFs.
   version: "0.1"
 
+tags:
+  - name: chats
+    description: "Operations related to chats"
+  - name: messages
+    description: "Operations related to messages"
+  - name: session
+    description: "Operation related to the session"
+  - name: settings
+    description: "Operation related to the settings"
+
 servers:
   - url: https://127.0.0.1:3000
 
@@ -18,6 +28,9 @@ components:
       schema:
         type: string
         example: "sourceChat123"
+        pattern: "^[a-zA-Z0-9_-]+$"
+        minLength: 1
+        maxLength: 64
       description: "Unique identifier of the source chat"
 
     targetChatId:
@@ -26,6 +39,9 @@ components:
       required: true
       schema:
         type: string
+        pattern: "^[a-zA-Z0-9_-]+$"
+        minLength: 1
+        maxLength: 64
         example: "targetChat456"
       description: "Unique identifier of the target chat"
 
@@ -35,6 +51,9 @@ components:
       required: true
       schema:
         type: string
+        pattern: "^[a-zA-Z0-9_-]+$"
+        minLength: 1
+        maxLength: 64
         example: "comment789"
       description: "Unique identifier of the comment to be removed"
 
@@ -52,7 +71,12 @@ components:
       schema:
         type: string
         example: "message789"
+        pattern: "^[a-zA-Z0-9_-]+$"
+        minLength: 1
+        maxLength: 64
       description: "Unique identifier of the message to be removed"
+  
+  
   securitySchemes:
     bearerAuth:
       type: http
@@ -116,70 +140,9 @@ paths:
                     type: string
                     example: "An unexpected error occurred."
 
-  /session/setusername:
-    post:
-      tags: ["login"]
-      summary: "Set the username"
-      description: >-
-        Users can set up their username, or a default will be generated.
-      operationId: setMyUserName
-      requestBody:
-        description: "Set your username"
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: ".JohnDoe_24-$"
-                  pattern: "^[a-zA-Z0-9._]+$"
-                  minLength: 3
-                  maxLength: 32
-      responses:
-        '201':
-          description: "Username successfully set"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  identifier:
-                    type: string
-                    example: ".JohnDoe_24-$"
-        '400':
-          description: "Invalid username format"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Username contains invalid characters or does not meet length requirements."
-        '409':
-          description: "Username already exists"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "The username is already taken. Please choose another."
-        '500':
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "An unexpected error occurred."
+
   ### CHATS SECTION ###
-  /session/chats:
+  /chats:
     get:
       tags: ["chats"]
       summary: "Retrieve user conversations"
@@ -229,7 +192,7 @@ paths:
                   error:
                     type: string
                     example: "Unable to update the photo due to a server error."
-  /session/chats/{sourceChatId}:
+  /chats/{sourceChatId}:
     get:
       tags: ["chats"]
       summary: "Retrieve specific chat details"
@@ -273,6 +236,7 @@ paths:
                 properties:
                   error:
                     type: string
+                    pattern: "^[a-zA-Z0-9_-]+$"
                     example: "Chat not found"      
         "500":
           description: "Internal server error"
@@ -285,7 +249,7 @@ paths:
                     type: string
                     example: "Unable to update the photo due to a server error."
 
-  /session/chats/{sourceChatId}/messages:
+  /chats/{sourceChatId}/messages:
     post:
       tags: ["chats"]
       summary: "Send a message in a chat"
@@ -304,12 +268,11 @@ paths:
                 content:
                   anyOf:
                     - type: string
-                      format: "emoji"
-                      pattern: "(?:[\\u{1F600}-\\u{1F64F}]|\\u{1F300}-\\u{1F5FF})+"
+                      pattern: "^[\u1F600-\u1F64F\u1F300-\u1F5FF]+$"
                     - type: string
                       description: "Text message"
                     - type: string
-                      format: uri
+                      format: url
                       description: "Image/GIF URL"
                 timestamp:
                   type: string
@@ -345,9 +308,9 @@ paths:
                     type: string
                     example: "Unable to update the photo due to a server error."
 
-  /session/chats/{sourceChatId}/forwardmessages/{targetChatId}:
+  /chats/{sourceChatId}/Fmessages/{targetChatId}:
     post:
-      tags: ["forward message"]
+      tags: ["chats"]
       summary: "Forward a message from a specific chat to another specific chat"
       description: |
         Allows a user to forward a message from a specified source chat to a specified target chat.
@@ -407,7 +370,7 @@ paths:
                     type: string
                     description: "Status of the message forwarding action"
                     example: "Forwarded"
-  /session/chats/{sourceChatId}/deletemessage:
+  /chats/{sourceChatId}/Dmessage/{messageId}:
     delete:
       tags: ["chats"]
       summary: "Remove a specific message within the same chat"
@@ -441,7 +404,7 @@ paths:
 
 
 
-  /session/chats/{sourceChatId}/add-to-group:
+  /chats/{sourceChatId}/Agroup:
     post:
       tags: ["chats"]
       summary: "Add user to group chat"
@@ -490,9 +453,10 @@ paths:
                 properties:
                   error:
                     type: string
+                    pattern: "^[a-zA-Z0-9_-]+$"
                     example: "Unable to update the photo due to a server error."
 
-  /session/chats/{sourceChatId}/comment:
+  /chats/{sourceChatId}/comment:
     post:
       tags: ["chats"]
       summary: "Comment on a specific message within the same chat"
@@ -514,7 +478,7 @@ paths:
                 content:
                   type: "string"
                   format: "emoji"
-                  pattern: (?:[\\u{1F600}-\\u{1F64F}]|\\u{1F300}-\\u{1F5FF})+ 
+                  pattern: "^[\u1F600-\u1F64F\u1F300-\u1F5FF]+$"
                   minLength: 1
       responses:
         "201":
@@ -552,7 +516,7 @@ paths:
                     type: string
                     example: "Unable to update the photo due to a server error."
 
-  /session/chats/{sourceChatId}/uncomment:
+  /chats/{sourceChatId}/uncomment/{commentId}:
     delete:
       tags: ["chats"]
       summary: "Remove a specific comment from a message within the same chat"
@@ -583,7 +547,7 @@ paths:
                   error:
                     type: string
                     example: "Unable to update the photo due to a server error."
-  /session/chats/{sourceChatId}/leave-group:
+  /chats/{sourceChatId}/Dgroup:
     delete:
       tags: ["chats"]
       summary: "Leave a group chat"
@@ -613,7 +577,7 @@ paths:
                   error:
                     type: string
                     example: "Unable to update the photo due to a server error."
-  /session/chats/{sourceChatId}/Grouphoto:
+  /chats/{sourceChatId}/Grouphoto:
     post:
       tags: ["chats"]
       summary: "Change the group photo"
@@ -670,7 +634,7 @@ paths:
                   error:
                     type: string
                     example: "Unable to update the photo due to a server error."
-  /session/chats/{sourceChatId}/Groupname:
+  /chats/{sourceChatId}/Groupname:
     post:
       tags: ["chats"]
       summary: "Change the group name"
@@ -861,3 +825,65 @@ paths:
                   error:
                     type: string
                     example: "Unable to update the photo due to a server error."
+  /settings/username:
+      post:
+        tags: ["settings"]
+        summary: "Set the username"
+        description: >-
+          Users can set up their username, or a default will be generated.
+        operationId: setMyUserName
+        requestBody:
+          description: "Set your username"
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: ".JohnDoe_24-$"
+                    pattern: "^[a-zA-Z0-9._]+$"
+                    minLength: 3
+                    maxLength: 32
+        responses:
+          '201':
+            description: "Username successfully set"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    identifier:
+                      type: string
+                      example: ".JohnDoe_24-$"
+          '400':
+            description: "Invalid username format"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "Username contains invalid characters or does not meet length requirements."
+          '409':
+            description: "Username already exists"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "The username is already taken. Please choose another."
+          '500':
+            description: "Internal server error"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "An unexpected error occurred."
