@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/ardanlabs/conf v1.5.0
-	github.com/gofrs/uuid v4.4.0+incompatible
+
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/julienschmidt/httprouter v1.3.0
@@ -18,6 +18,7 @@ require (
 require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
