@@ -2,83 +2,116 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
-	"regexp"
+	"os"
+	"path/filepath"
 	"time"
+
+	"wasatext/service/database"
+	"wasatext/service/api/structs"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
-// MessageRequest represents the expected request body for sending a message
-type MessageRequest struct {
-	SenderID  string    `json:"senderId"`
-	Content   string    `json:"content"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
-// MessageResponse represents the response sent back to the client
-type MessageResponse struct {
-	MessageID string `json:"messageId"`
-}
-
-// SendMessageHandler handles sending a message to a specific chat
-func SendMessageHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract sourceChatId from path parameters
+// SendMessageHandler gestisce l'invio di un messaggio a una conversazione
+func SendMessageHandler(database database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	// Estrai l'ID della conversazione dall'URL
 	vars := mux.Vars(r)
-	sourceChatId := vars["sourceChatId"]
-
-	// Parse and validate request body
-	var messageReq MessageRequest
-	if err := json.NewDecoder(r.Body).Decode(&messageReq); err != nil {
-		log.Printf("Error decoding request body: %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid input data"})
+	conversationId := vars["sourceChatId"]
+	// Parse form data
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // Limite upload 10MB
+		respondWithErrorsndmsg(w, http.StatusBadRequest, "Errore nella richiesta multipart")
 		return
 	}
 
-	// Validate the senderId
-	if messageReq.SenderID == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Sender ID is required"})
+	// Estrai i dati dal form
+	senderID := vars["id"]
+	if senderID == "" {
+		respondWithErrorsndmsg(w, http.StatusBadRequest, "Sender ID is required")
 		return
 	}
 
-	// Validate content (emoji, text, or URL)
-	if !isValidContent(messageReq.Content) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid content format"})
+	content := r.FormValue("content")
+	var filePath string // Definiamo la variabile filePath prima dell'uso
+
+	// Gestione dell'upload file
+	file, handler, err := r.FormFile("file")
+	if err == nil { // Se non c'è errore, significa che è stato caricato un file
+		defer file.Close()
+		filePath, err = saveUploadedFilesndmsg(file, handler)
+		if err != nil {
+			respondWithErrorsndmsg(w, http.StatusInternalServerError, "Errore nel salvataggio del file")
+			return
+		}
+	}
+
+	// Verifica che ci sia almeno un contenuto (testo o file)
+	if content == "" && filePath == "" {
+		respondWithErrorsndmsg(w, http.StatusBadRequest, "Messaggio vuoto")
 		return
 	}
 
-	// Generate a unique message ID
-	messageID := uuid.New().String()
 
-	// Mock saving the message to a database (not implemented)
-	log.Printf("Message sent in chat %s by sender %s: %s", sourceChatId, messageReq.SenderID, messageReq.Content)
+	log.Printf(content)
 
-	// Respond with the generated message ID
+	// Crea la struttura del messaggio
+	newMessage := structs.Message{
+		SenderUserId:   senderID,
+		ConversationId: conversationId,
+		Text:           content,
+		Photo:          filePath, // Se il messaggio contiene un file, salviamo il percorso
+		SendTime:       time.Now(),
+		Status:         "sent", // Imposta lo stato del messaggio
+	}
+	log.Printf(newMessage.Text)
+	// Salva il messaggio nel database
+	savedMessage, err := database.CreateMessage(newMessage)
+	if err != nil {
+		log.Printf("Errore nella creazione del messaggio: %v", err)
+		respondWithErrorsndmsg(w, http.StatusInternalServerError, "Errore nell'invio del messaggio")
+		return
+	}
+	log.Printf(savedMessage.ConversationId)
+
+	// Rispondi con il messaggio salvato
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(MessageResponse{MessageID: messageID})
+	json.NewEncoder(w).Encode(savedMessage)
+}
 }
 
-// isValidContent validates message content
-func isValidContent(content string) bool {
-	// Emoji pattern
-	emojiPattern := regexp.MustCompile(`(?:[\x{1F600}-\x{1F64F}]|[\x{1F300}-\x{1F5FF}])+`)
+// SaveUploadedFile salva un file caricato in una directory specificata
+func saveUploadedFilesndmsg(file multipart.File, handler *multipart.FileHeader) (string, error) {
+	dir := "uploads/"
+	os.MkdirAll(dir, os.ModePerm) // Assicura che la cartella esista
 
-	// URL pattern (simplified)
-	urlPattern := regexp.MustCompile(`^https?://\S+$`)
+	// Genera un nome univoco per il file
+	fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+	filePath := filepath.Join(dir, fileName)
 
-	// Text (any non-empty string is valid)
-	if content == "" {
-		return false
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, file)
+	if err != nil {
+		return "", err
 	}
 
-	return emojiPattern.MatchString(content) || urlPattern.MatchString(content) || len(content) > 0
+	return filePath, nil
+}
+
+// utils.respondWithError invia una risposta JSON di errore
+func respondWithErrorsndmsg(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }

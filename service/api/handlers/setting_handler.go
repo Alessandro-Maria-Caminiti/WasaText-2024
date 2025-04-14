@@ -32,19 +32,4 @@ func UpdateUserSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Here we can validate the theme (e.g., only "light" or "dark" are allowed)
-	if newSettings.Theme != "light" && newSettings.Theme != "dark" {
-		http.Error(w, "Invalid theme value provided.", http.StatusBadRequest)
-		return
-	}
-
-	// Update the global settings with the new settings
-	currentSettings = newSettings
-
-	// Respond with the success message
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": "Settings updated successfully",
-	})
 }

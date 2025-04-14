@@ -3,79 +3,149 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
+	"mime/multipart"
+	"github.com/google/uuid"
+	"wasatext/service/api/images"
+	"wasatext/service/database"
 )
 
-const photoDir = "./uploads" // Directory where photos will be stored
+// PhotoUploadResponse represents the response sent back to the client
+type PhotoUploadResponse struct {
+	Status   string `json:"status"`
+	PhotoURL string `json:"photoUrl"`
+	Photo   string `json:"photo"` // Base64 opzionale
+}
 
-// SetUserPhoto handles the POST /settings/userphoto route
-func SetUserPhoto(w http.ResponseWriter, r *http.Request) {
-	// Parse the multipart form data with a limit of 10MB
-	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
-	if err != nil {
-		http.Error(w, "Unable to process the form data", http.StatusInternalServerError)
-		return
+// SetMyPhotoHandler handles updating a user's profile photo
+func SetMyPhotoHandler(database database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Extract user ID from URL
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) < 4 || parts[2] == "" {
+			http.Error(w, "Missing user ID", http.StatusBadRequest)
+			return
+		}
+		userID := parts[2]
+
+		// Parse form data (limit upload size to 10MB)
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			http.Error(w, "Error parsing form data", http.StatusBadRequest)
+			return
+		}
+
+		// Retrieve the file
+		file, handler, err := r.FormFile("image")
+		if err != nil {
+			http.Error(w, "Invalid file upload", http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		// Create user-specific directory if not exists
+		uploadDir := fmt.Sprintf("./storage/users/%s/", userID)
+		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+			http.Error(w, "Failed to create user directory", http.StatusInternalServerError)
+			return
+		}
+
+		// Validate and determine file extension
+		ext := strings.ToLower(filepath.Ext(handler.Filename))
+		if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+			http.Error(w, "Invalid file format. Only JPEG and PNG are allowed.", http.StatusBadRequest)
+			return
+		}
+
+		// Save the file
+		filePath := filepath.Join(uploadDir, "profile"+ext)
+		outFile, err := os.Create(filePath)
+		if err != nil {
+			http.Error(w, "Unable to save the photo", http.StatusInternalServerError)
+			return
+		}
+		defer outFile.Close()
+
+		_, err = io.Copy(outFile, file)
+		if err != nil {
+			http.Error(w, "Error saving file", http.StatusInternalServerError)
+			return
+		}
+		
+		// Convert image to Base64
+		base64Str, err := images.ImageToBase64(filePath)
+		if err != nil {
+			log.Printf("Base64 conversion error: %v", err)
+			base64Str = "" // If conversion fails, leave it empty
+		}
+
+		// Resize image to 300x300 pixels
+		err = images.SaveAndCrop(filePath, 300, 300)
+		if err != nil {
+			log.Printf("Image resize error: %v", err)
+		}
+
+		// Generate the public URL
+		photoURL := fmt.Sprintf("/uploads/users/%s/profile%s", userID, ext)
+
+		// Update database with the new image path
+		err = database.UpdateUserProfileImage(userID, photoURL)
+		if err != nil {
+			log.Printf(err.Error())
+			os.Remove(filePath) // Delete file if DB update fails
+			http.Error(w, "Failed to update user profile in database", http.StatusInternalServerError)
+			return
+		}
+		var response PhotoUploadResponse
+		response.Status = "user Photo Updated Successfully"
+		response.PhotoURL= photoURL
+		response.Photo = base64Str
+		log.Printf(response.Photo)
+		// Send JSON response
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 	}
+}
 
-	// Get the photo file from the form
-	file, _, err := r.FormFile("photo")
-	if err != nil {
-		http.Error(w, "No file uploaded", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
+// utils.respondWithError invia una risposta JSON di errore
+func respondWithErrorusrpht(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
 
-	// Get the description (optional)
-	description := r.FormValue("description")
+// SaveUploadedFile salva un file caricato in una directory specificata
+func saveUploadedFileusrpht(file multipart.File, handler *multipart.FileHeader) (string, error) {
+	dir := "uploads/"
+	os.MkdirAll(dir, os.ModePerm) // Assicura che la cartella esista
 
-	// Check the file extension to ensure it's a valid image format (JPEG, PNG)
-	ext := strings.ToLower(filepath.Ext(description))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
-		http.Error(w, "Invalid file format. Only JPEG and PNG are allowed.", http.StatusBadRequest)
-		return
-	}
+	// Genera un nome univoco per il file
+	fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+	filePath := filepath.Join(dir, fileName)
 
-	// Generate a unique filename for the photo
-	// This can be extended to use more advanced unique identifiers like UUIDs
-	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-	filePath := filepath.Join(photoDir, fileName)
-
-	// Create the uploads directory if it doesn't exist
-	err = os.MkdirAll(photoDir, os.ModePerm)
-	if err != nil {
-		http.Error(w, "Unable to create upload directory", http.StatusInternalServerError)
-		return
-	}
-
-	// Save the photo to disk
 	outFile, err := os.Create(filePath)
 	if err != nil {
-		http.Error(w, "Unable to save the photo", http.StatusInternalServerError)
-		return
+		return "", err
 	}
 	defer outFile.Close()
 
-	// Copy the uploaded file to the server
-	_, err = ioutil.ReadAll(file)
+	_, err = io.Copy(outFile, file)
 	if err != nil {
-		http.Error(w, "Error reading file", http.StatusInternalServerError)
-		return
+		return "", err
 	}
 
-	// Respond with the success message and the URL of the uploaded photo
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	response := map[string]interface{}{
-		"status":   "User photo updated successfully",
-		"photoUrl": "https://example.com/images/" + fileName, // Replace with actual URL where the photo can be accessed
-	}
-	if description != "" {
-		response["description"] = description
-	}
-	json.NewEncoder(w).Encode(response)
+	return filePath, nil
 }
+
+// isValidImageFile checks if the file has a valid image extension
+func isValidImageFile(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	return ext == ".jpg" || ext == ".jpeg" || ext == ".png"
+}
+

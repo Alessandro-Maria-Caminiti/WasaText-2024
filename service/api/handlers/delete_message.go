@@ -1,23 +1,45 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
+	"wasatext/service/database"
+	 
+	"github.com/gorilla/mux"
 )
 
-// DeleteMessageHandler handles the deletion of a message
-func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract parameters from the URL
-	sourceChatID := r.URL.Query().Get("sourceChatId")
-	messageID := r.URL.Query().Get("messageId")
-
-	if sourceChatID == "" || messageID == "" {
-		http.Error(w, "sourceChatId and messageId are required", http.StatusBadRequest)
+// DeleteMessageHandler gestisce la richiesta di eliminazione di un messaggio
+func DeleteMessageHandler(database database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	// Estrarre i parametri dall'URL
+	vars := mux.Vars(r)
+	messageId:= vars["messageId"]
+	if messageId == "" {
+		respondWithErrordeletemsg(w, http.StatusBadRequest, "ID messaggio non valido")
 		return
 	}
 
-	// Mock logic to delete a message
-	// In a real implementation, you would interact with a database or another service here
-	// For now, we'll assume the deletion is successful
+	convId := vars["sourceChatId"]
+	if convId == "" {
+		respondWithErrordeletemsg(w, http.StatusBadRequest, "ID conversazione non valido")
+		return
+	}
 
-	w.WriteHeader(http.StatusNoContent) // 204 No Content indicates successful deletion
+	// Tentativo di eliminare il messaggio dal database
+	err := database.DeleteMessage(messageId, convId)
+	if err != nil {
+		respondWithErrordeletemsg(w, http.StatusNotFound, "Messaggio non trovato o errore nell'eliminazione")
+		return
+	}
+
+	// Risposta con successo
+	w.WriteHeader(http.StatusNoContent) // 204 No Content
+}}
+
+
+// utils.respondWithError invia una risposta JSON di errore
+func respondWithErrordeletemsg(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }

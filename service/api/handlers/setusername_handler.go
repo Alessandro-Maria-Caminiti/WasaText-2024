@@ -5,43 +5,70 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"wasatext/service/api/models" // Import models
+	"wasatext/service/api/models"
+	"wasatext/service/database"
+	"strings"
 )
 
-// SetUsernameHandler handles the /session/setusername POST request.
-func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.UserRequest
+// SetUsernameHandler gestisce la modifica dell'username, mantenendo lo stesso identifier.
+func SetUsernameHandler(db database.AppDatabase) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        // Estrai l'userID dall'URL
+           // Per la route settings/{id}/deleteuser
+   		 parts := strings.Split(r.URL.Path, "/")
+    
+		// Controlliamo che ci siano abbastanza parti nell'URL e che l'ID non sia vuoto
+		// L'URL dovrebbe essere del tipo /settings/{id}/deleteuser
+		// quindi l'ID si trova nella posizione parts[2]
+		fmt.Printf(parts[3])
+		if len(parts) < 4 || parts[3] == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Missing user ID"})
+			return
+		}
+		userID := parts[3]
 
-	// Decode the request body into UserRequest
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username format. Ensure JSON format is correct."})
-		return
-	}
+        if userID == "" {
+            http.Error(w, "User ID is required", http.StatusBadRequest)
+            return
+        }
 
-	// Validate the username format and length
-	if err := validateUsername(user.Name); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
-	}
+        var user models.UserRequest
+        // Decode il body JSON
+        if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+            http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+            return
+        }
 
-	// Check if the username already exists (this is just a placeholder; use real DB logic in production)
-	if usernameExists(user.Name) {
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(map[string]string{"error": "The username is already taken. Please choose another."})
-		return
-	}
+        // Validiamo il nuovo username
+        if err := validateUsername(user.Name); err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
 
-	// Simulate the process of setting the username (e.g., saving it in a DB)
-	// For now, return the username as the identifier.
-	response := map[string]string{"identifier": user.Name}
+        // Controlla se l'utente esiste
+        _, err := db.CheckIfExist(user.Name)  // Assumendo che hai questa funzione
+        if err != nil {
+            http.Error(w, "User already exists", http.StatusNotFound)
+            return
+        }
 
-	// Send success response
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+        // Aggiorniamo il nome utente
+        if err := db.SetMyUsername(userID, user.Name); err != nil {
+            http.Error(w, "Error updating username", http.StatusInternalServerError)
+            return
+        }
+		 userdb,err := db.GetUserByName(user.Name)
+		 if err != nil{
+			http.Error(w, "User not found", http.StatusNotFound)
+            return
+		 }
+        // Rispondiamo con l'identifier che rimane invariato
+        response := map[string]string{"identifier": userID, "Name":userdb.Username}
+        w.WriteHeader(http.StatusOK)  // Meglio usare StatusOK per un aggiornamento riuscito
+        json.NewEncoder(w).Encode(response)
+    }
 }
-
 // validateUsername validates the username against the given pattern and length
 func validateUsername(username string) error {
 	// Check length
@@ -58,11 +85,4 @@ func validateUsername(username string) error {
 	}
 
 	return nil
-}
-
-// usernameExists is a placeholder function to simulate checking if a username exists in a database.
-func usernameExists(username string) bool {
-	// This should interact with your database to check if the username already exists.
-	// For now, we assume no username exists.
-	return false
 }

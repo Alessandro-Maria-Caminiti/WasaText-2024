@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log" 
 	"net/http"
-
+	"wasatext/service/database"
+	"wasatext/service/api/structs"
 	"github.com/gorilla/mux"
 )
 
 // CommentRequest represents the structure of the comment request body
 type CommentRequest struct {
-	SenderID string `json:"senderId"`
+	MessageId string `json:"messageId` 
 	Content  string `json:"content"`
 }
 
@@ -21,53 +22,125 @@ type CommentResponse struct {
 }
 
 // CommentMessageHandler handles posting a comment on a specific message
-func CommentMessageHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract sourceChatId from the URL path
-	vars := mux.Vars(r)
-	sourceChatId := vars["sourceChatId"]
+func CommentMessageHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		SenderID := vars["id"]
+		ConversationID := vars["sourceChatId"]
 
-	// Parse the request body
-	var commentReq CommentRequest
-	if err := json.NewDecoder(r.Body).Decode(&commentReq); err != nil {
-		log.Printf("Error decoding request body: %v", err)
+
+		var commentReq CommentRequest
+		if err := json.NewDecoder(r.Body).Decode(&commentReq); err != nil {
+			log.Printf("Error decoding request body: %v", err)
+			http.Error(w, `{"error":"Invalid input data"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Controlli di validazione
+		if SenderID == "" || commentReq.MessageId == "" {
+			log.Printf("SenderId:%s,Comment lenght:%d,MessageId:%s", SenderID, len(commentReq.Content), commentReq.MessageId)
+			http.Error(w, `{"error":"Sender ID, content or MEssageId are required"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Creazione del commento nel database
+		comment := structs.Comment{
+			CommentUserId:  SenderID, 
+			MessageId:      commentReq.MessageId,           
+			Comment:        commentReq.Content,   
+			ConversationId:  ConversationID,
+		}
+		commentID, err := db.CreateComment(comment) 
+		if err != nil {
+			log.Printf("Error creating comment: %v", err)
+			http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+			return
+		}
+		
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid input data"})
-		return
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(CommentResponse{
+			MessageID: commentID.CommentId,
+			Status:    "Sent",
+		})
 	}
+}
 
-	// Validate senderId and content
-	if commentReq.SenderID == "" {
+func DeleteCommentHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		commentID := vars["CommentId"]
+		messageID := vars["MessageId"]
+		conversationID := r.URL.Query().Get("ConversationID")
+
+		if err := db.DeleteComment(commentID, messageID, conversationID) ; err != nil {
+			log.Printf("Error deleting comment: %v", err)
+			http.Error(w, `{"error":"Error deleting comment"}`, http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func GetMsgCommentHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		messageID := vars["messageId"]
+		conversationID := r.URL.Query().Get("ConversationID")
+		comments, err := db.GetMsgComments(messageID,conversationID)
+		if err != nil {
+			log.Printf("Error retrieving comments: %v", err)
+			http.Error(w, `{"error":"Error retrieving comments"}`, http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Sender ID is required"})
-		return
+		json.NewEncoder(w).Encode(comments)
 	}
+}
 
-	if len(commentReq.Content) < 1 {
+func GetCommentByUserHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		userID := vars["id"]
+		messageID := vars["MessageId"]
+		conversationID := r.URL.Query().Get("ConversationID")
+
+		comments, err := db.GetCommentByUser(userID,messageID,conversationID)
+		if err != nil {
+			log.Printf("Error retrieving user comments: %v", err)
+			http.Error(w, `{"error":"Error retrieving user comments"}`, http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Content cannot be empty"})
-		return
+		json.NewEncoder(w).Encode(comments)
 	}
+}
 
-	// Simulate checking if the message exists in the chat (you would check a database or in-memory store here)
-	messageExists := true // Mock value. Replace with actual message existence check.
-	if !messageExists {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Message not found"})
-		return
+func UpdateCommentsHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		commentID := vars["commentId"]
+		messageID := vars["MessageId"]
+		conversationID := r.URL.Query().Get("ConversationID")
+
+		var updateReq struct {
+			Content string `json:"content"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&updateReq); err != nil {
+			http.Error(w, `{"error":"Invalid input data"}`, http.StatusBadRequest)
+			return
+		}
+
+		if err := db.UpdateComment(updateReq.Content, commentID, messageID,conversationID ); err != nil {
+			log.Printf("Error updating comment: %v", err)
+			http.Error(w, `{"error":"Error updating comment"}`, http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
-
-	// Mock adding the comment to the message (database logic would go here)
-	log.Printf("Comment by %s on message in chat %s: %s", commentReq.SenderID, sourceChatId, commentReq.Content)
-
-	// Respond with the message ID and status
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(CommentResponse{
-		MessageID: "msg789", // Mocked message ID
-		Status:    "Sent",   // Success status
-	})
 }

@@ -3,54 +3,64 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
+	"wasatext/service/database"
+	"log"
+	"github.com/gorilla/mux"
 )
 
 // ForwardMessageRequest represents the request body for forwarding a message
 type ForwardMessageRequest struct {
-	MessageID         string    `json:"messageId" validate:"required"`
-	SenderID          string    `json:"senderId" validate:"required"`
-	OriginalTimestamp time.Time `json:"originalTimestamp" validate:"required"`
+	MessageID         string    	`json:"messageId" validate:"required"`
 }
 
 // ForwardMessageResponse represents the response body for a forwarded message
 type ForwardMessageResponse struct {
-	ForwardedMessageID string `json:"forwardedMessageId"`
-	Status             string `json:"status"`
+	ForwardedMessageID string 	`json:"forwardedMessageId"`
+	Status             string 	`json:"status"`
 }
 
-// ForwardMessageHandler handles the forwarding of a message
-func ForwardMessageHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract parameters from the URL
-	sourceChatID := r.URL.Query().Get("sourceChatId")
-	targetChatID := r.URL.Query().Get("targetChatId")
-
+// ForwardMessageHandler gestisce l'inoltro di un messaggio
+func ForwardMessageHandler(db database.AppDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) { 
+	// Estrai i parametri dalla richiesta
+	vars := mux.Vars(r)
+	sourceChatID := vars["sourceChatId"]
+	targetChatID := vars["targetChatId"]
+	SenderID := vars["id"]
+	log.Printf("Source:%s, Target:%s", sourceChatID, targetChatID)
 	if sourceChatID == "" || targetChatID == "" {
-		http.Error(w, "sourceChatId and targetChatId are required", http.StatusBadRequest)
+		respondWithErrorfrwmsg(w, http.StatusBadRequest, "ID conversazione non valido")
 		return
 	}
 
-	// Parse request body
+	// Decodifica il corpo della richiesta
 	var req ForwardMessageRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		
+		respondWithErrorfrwmsg(w, http.StatusBadRequest, "Formato richiesta non valido")
 		return
 	}
 
-	// Validate request
-	if req.MessageID == "" || req.SenderID == "" {
-		http.Error(w, "messageId and senderId are required", http.StatusBadRequest)
+	// Inoltra il messaggio usando il database
+	forwardedMessage, err := db.ForwardMessage(req.MessageID, sourceChatID, targetChatID, SenderID)
+	if err != nil {
+		
+		respondWithErrorfrwmsg(w, http.StatusInternalServerError, "Errore nell'inoltro del messaggio")
 		return
 	}
 
-	// Mock logic for forwarding a message
+	// Rispondi con il nuovo messaggio inoltrato
 	response := ForwardMessageResponse{
-		ForwardedMessageID: "forwardedMsg101", // This would be dynamically generated in real logic
+		ForwardedMessageID: forwardedMessage.MessageId, // MessageId è già stringa
 		Status:             "Forwarded",
 	}
-
-	// Respond with the forwarded message details
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}}
+// utils.respondWithError invia una risposta JSON di errore
+func respondWithErrorfrwmsg(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
