@@ -1,896 +1,780 @@
 openapi: 3.0.3
+servers:
+  - url: "http://localhost:3000"
 info:
-  title: WasaText Pre-Alpha
+  title: WasaText
   description: |
     Connect with your friends effortlessly using WASAText! Send and receive messages, whether one-on-one
-    or in groups, all from the convenience of your PC. Enjoy seamless conversations with text, emojis, or GIFs.
-  version: "0.1"
+    or in groups, all from the convenience of your PC. Enjoy seamless conversations with text or GIFs and
+    easily stay in touch through your private chats or group discussions.
+  version: 0.0.1
 
 tags:
-  - name: chats
-    description: "Operations related to chats"
-  - name: messages
-    description: "Operations related to messages"
-  - name: session
-    description: "Operation related to the session"
-  - name: settings
-    description: "Operation related to the settings"
+  - name: "Login"
+    description: |
+      Session of a user who logged in
+  - name: "User"
+    description: |
+      Operations that access to user information (like username and photo picture)
+  - name: "Conversation"
+    description: |
+      Operations acting on conversations
+  - name: "Group"
+    description: |
+      Operations acting on groups
+  - name: "Message"
+    description: |
+      Operations acting on messages
+  - name: "Comment"
+    description: |
+      Operations acting on comment of messages
 
-servers:
-  - url: https://127.0.0.1:3000
+paths:
+  /session:
+    post:
+      tags: [Login]
+      operationId: doLogin
+      summary: Login in the site
+      description: |
+        If the user does not exist, it will be created,
+        and an identifier is returned.
+        If the user exists, the user identifier is returned.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: User name
+              type: object
+              properties:
+                name: { $ref: "#/components/schemas/Name" }
+        required: true
+      responses:
+        "200":
+          description: Succesfully logged in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Identification" }
+        "201":
+          description: Account created succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Identification" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  # Tag User
+  /profiles:
+    parameters:
+      - name: searched_user
+        in: query
+        required: true
+        description: the username to search a user
+        schema: { $ref: "#/components/schemas/Name" }
+    get:
+      tags: ["User"]
+      operationId: searchUsers
+      summary: Get the list of users
+      description: |-
+        Get the list of Users that match with the username specified in the query.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Get the list of profiles corrisponding with the username searched
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProfilesList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /profiles/{user}/username:
+    parameters:
+      - $ref: "#/components/parameters/user"
+    put:
+      tags: [User]
+      operationId: setMyUserName
+      security:
+        - bearerAuth: []
+      summary: set user name of the utent
+      description: |
+        Taking a name from the requestBody, replace the
+        username actually used from the utent with the new one
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: New name, to replace the current user name
+              type: object
+              properties:
+                new_name: { $ref: "#/components/schemas/Name" }
+        required: true
+      responses:
+        "200":
+          description: The user name was set successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /profiles/{user}/photo:
+    parameters:
+      - $ref: "#/components/parameters/user"
+    put:
+      tags: [User]
+      operationId: setMyPhoto
+      security:
+        - bearerAuth: []
+      summary: set profile image
+      description: |
+        Set the profile image of the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Photo to upload in the profile picture
+              type: object
+              properties:
+                picture: { $ref: "#/components/schemas/Photo" }
+        required: true
+      responses:
+        "200":
+          description: The photo was uploaded succesfully
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # Tag Group
+  /profiles/{user}/groups:
+    parameters:
+      - $ref: "#/components/parameters/user"
+    post:
+      tags: [Group]
+      operationId: createGroup
+      security:
+        - bearerAuth: []
+      summary: creation of a group
+      description: |
+        With a name taked from the user, create a group
+        controlling if the name is already in use
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Name for the new group
+              type: object
+              properties:
+                name: { $ref: "#/components/schemas/Name" }
+                users: { $ref: "#/components/schemas/ProfilesList" }
+        required: true
+      responses:
+        "201":
+          description: Group created succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Group" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /profiles/{user}/groups/{group}:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/group"
+    put:
+      parameters:
+        - name: user_to_add
+          in: query
+          required: true
+          description: User to add
+          schema: { $ref: "#/components/schemas/ProfilesList" }
+      tags: [Group]
+      operationId: addToGroup
+      security:
+        - bearerAuth: []
+      summary: add the user to a group
+      description: |
+        Add the user the the group
+        in 'group' defined in the path
+      responses:
+        "200":
+          description: The user was added to the group
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Group]
+      operationId: leaveGroup
+      security:
+        - bearerAuth: []
+      summary: leave from a group
+      description: |
+        Leave the user from the group
+        specified with the id in the path
+      responses:
+        "200":
+          description: The user was leaved the group
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /profiles/{user}/groups/{group}/groupname:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/group"
+    put:
+      tags: [Group]
+      operationId: setGroupName
+      security:
+        - bearerAuth: []
+      summary: set name of the group
+      description: |
+        Taking a name from the requestBody, replace the
+        group name actually used with the new one
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: New name for the group
+              type: object
+              properties:
+                name: { $ref: "#/components/schemas/Name" }
+        required: true
+      responses:
+        "200":
+          description: The group name was set succesfully
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /profiles/{user}/groups/{group}/grouphoto:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/group"
+    put:
+      tags: [Group]
+      operationId: setGroupPhoto
+      security:
+        - bearerAuth: []
+      summary: set group image
+      description: |
+        Set the group image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Group picture
+              type: object
+              properties:
+                picture: { $ref: "#/components/schemas/Photo" }
+        required: true
+      responses:
+        "200":
+          description: The photo was uploaded succesfully
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # Tag Conversation
+  /profiles/{user}/conversations:
+    parameters:
+      - $ref: "#/components/parameters/user"
+    get:
+      tags: [Conversation]
+      operationId: getMyConversations
+      security:
+        - bearerAuth: []
+      summary: Get all conversation of user
+      description: |
+        Retrun the list of all conversations of the user
+      responses:
+        "200":
+          description: Succesfully getted conversations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConversationCollection" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /profiles/{user}/conversations/{dest_user_id}:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/conv"
+    put:
+      tags: [Conversation]
+      operationId: createConversation
+      security:
+        - bearerAuth: []
+      summary: Create conversation
+      description: |
+        Take the id of the user or group to open a conversation with
+        required: true
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Message" }
+        required: false
+      responses:
+        "200":
+          description: Conversation opened
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InnerConv" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    get:
+      tags: [Conversation]
+      operationId: getConversation
+      security:
+        - bearerAuth: []
+      summary: Get a specified conversation
+      description: |
+        Return the conversation defined in the path
+      responses:
+        "200":
+          description: Conversation getted succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InnerConv" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  # Tag Message
+  /profiles/{user}/conversations/{dest_user_id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/conv"
+    post:
+      parameters:
+        - name: messaggio
+          description: messaggio da rispondere
+          in: query
+          required: false
+          schema: { $ref: "#/components/schemas/Identification" }
+      tags: [Message]
+      operationId: sendMessage
+      security:
+        - bearerAuth: []
+      summary: Send message in a conversation
+      description: Send the message in a specified conversation, defined in the path
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SentMessage" }
+      responses:
+        "201":
+          description: Message sended succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /profiles/{user}/conversations/{dest_user_id}/messages/{message}:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/conv"
+      - $ref: "#/components/parameters/msg"
+    post:
+      parameters:
+        - name: dest_user
+          description: Where send the message
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/ProfilesList" }
+      tags: [Message]
+      operationId: forwardMessage
+      security:
+        - bearerAuth: []
+      summary: Forward message to a conversation
+      description: |
+        Forward the selcted message from
+        the path to a conversation defined in the quey
+      responses:
+        "201":
+          description: Message forwarded succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Message]
+      operationId: deleteMessage
+      security:
+        - bearerAuth: []
+      summary: Delete message from the conversation
+      description: Delete message from the conversation
+      responses:
+        "200":
+          description: The message was deleted succesfully
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  # Tag Comment
+  /profiles/{user}/conversations/{dest_user_id}/messages/{message}/reactions:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/conv"
+      - $ref: "#/components/parameters/msg"
+    put:
+      tags: [Comment]
+      operationId: commentMessage
+      security:
+        - bearerAuth: []
+      summary: Comment a message
+      description: Comment the message in the path
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Reaction" }
+      responses:
+        "201":
+          description: Message commented succesfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Reaction" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /profiles/{user}/conversations/{dest_user_id}/messages/{message}/reactions/{reaction}:
+    parameters:
+      - $ref: "#/components/parameters/user"
+      - $ref: "#/components/parameters/conv"
+      - $ref: "#/components/parameters/msg"
+      - $ref: "#/components/parameters/react"
+    delete:
+      tags: [Comment]
+      operationId: uncommentMessage
+      security:
+        - bearerAuth: []
+      summary: Uncomment message
+      description: Delete the comment
+      responses:
+        "200":
+          description: The comment was deleted succesfully
+          content:
+            plain/text:
+              schema: { $ref: "#/components/schemas/Completed" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
 
 components:
   parameters:
-    sourceChatId:
-      name: sourceChatId
+    user:
+      name: user
       in: path
       required: true
-      schema:
-        type: string
-        example: "sourceChat123"
-        pattern: "^[a-zA-Z0-9_-]+$"
-        minLength: 1
-        maxLength: 64
-      description: "Unique identifier of the source chat"
+      description: The id of the utent who want execute the opreation defined
+      schema: { $ref: "#/components/schemas/Identification" }
+    group:
+      name: group
+      in: path
+      required: true
+      description: The id of the group in which the user want to use operations
+      schema: { $ref: "#/components/schemas/Identification" }
+    conv:
+      name: dest_user_id
+      in: path
+      required: true
+      description: ID dell'utente o del gruppo con cui aprire la conversazione
+      schema: { $ref: "#/components/schemas/Identification" }
+    msg:
+      name: message
+      in: path
+      required: true
+      description: ID of the message with which the user wants to use operations
+      schema: { $ref: "#/components/schemas/Identification" }
+    react:
+      name: reaction
+      in: path
+      required: true
+      description: ID of the comment of a message
+      schema: { $ref: "#/components/schemas/Identification" }
 
-    targetChatId:
-      name: targetChatId
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: "^[a-zA-Z0-9_-]+$"
-        minLength: 1
-        maxLength: 64
-        example: "targetChat456"
-      description: "Unique identifier of the target chat"
+  schemas:
+    # Used for the 200 response
+    Completed:
+      title: Completed
+      description: The operation was successful
+      type: string
+      pattern: "^.*?$"
+      example: "Action successfully completed"
+      minLength: 2
+      maxLength: 30
+    # Elements
+    Identification:
+      title: ID - identification
+      description: General identification number (used for example for users, groups or conversation)
+      type: integer
+      example: 100
+      minimum: 1
+    Photo:
+      title: Photo
+      description: Photo of a user profile ora a group
+      type: string
+      format: byte
+      minLength: 0
+      maxLength: 9999
+    Name:
+      title: Name
+      description: Name of a user or a group
+      type: string
+      pattern: ^[a-z0-9]{3,13}$
+      example: "admin123"
+      minLength: 3
+      maxLength: 13
+    Timestamp:
+      title: Timestamp
+      description: The timestamp of the post.
+      type: string
+      format: date-time
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+      example: "2020-12-31T23:59:59"
+      minLength: 19
+      maxLength: 19
+    Profile:
+      title: Profile
+      description: User profile information
+      type: object
+      properties:
+        username: { $ref: "#/components/schemas/Name" }
+        userimg: { $ref: "#/components/schemas/Photo" }
+        userid: { $ref: "#/components/schemas/Identification" }
+      required:
+        - username
+        - userid
+    ProfilesList:
+      title: List of profile
+      description: List of profiles in a group, conversation or in the search operation
+      type: object
+      properties:
+        profiles:
+          type: array
+          description: All profiles returned after a request like search
+          items: { $ref: "#/components/schemas/Profile" }
+          uniqueItems: true
+          minItems: 0
+          maxItems: 100
+      required:
+        - profiles
+    Text:
+      title: Text
+      description: Used to rappresent a text in a message or comment
+      type: string
+      pattern: '^[^\/\\]{0,100}$'
+      example: "Hi!"
+      minLength: 1
+      maxLength: 100
+    Reaction:
+      title: Reaction
+      description: Reaction of a message
+      type: object
+      properties:
+        id_react: { $ref: "#/components/schemas/Identification" }
+        emoticon:
+          type: string
+          description: emoticon
+          minLength: 1
+          maxLength: 1
+          pattern: "^.*?$"
+          example: "🐱"
+    MsgText:
+      title: Message Text
+      description: rappresent a message text
+      type: object
+      properties:
+        text: { $ref: "#/components/schemas/Text" }
+        msgid: { $ref: "#/components/schemas/Identification" }
+        send_time: { $ref: "#/components/schemas/Timestamp" }
+      required:
+        - text
+        - msgid
+        - send_time
+    MsgPhoto:
+      title: Message Photo
+      description: rappresent a photo sended like a message
+      type: object
+      properties:
+        photo: { $ref: "#/components/schemas/Photo" }
+        caption: { $ref: "#/components/schemas/Text" }
+        msgid: { $ref: "#/components/schemas/Identification" }
+        send_time: { $ref: "#/components/schemas/Timestamp" }
+      required:
+        - photo
+        - msgid
+        - send_time
+    BodyMessage:
+      oneOf:
+        - $ref: "#/components/schemas/MsgPhoto"
+        - $ref: "#/components/schemas/MsgText"
+    SentMessage:
+      title: Sent message
+      description: message posted by a user to another user ora a group
+      type: object
+      properties:
+        body: { $ref: "#/components/schemas/BodyMessage" }
+        status:
+          description: Define the status of a message
+          type: string
+          enum: [not_arrive, one_check, two_check]
+          example: one_check
+    RcvMessage:
+      title: Recived message
+      description: message recived by a user or a group
+      type: object
+      properties:
+        body: { $ref: "#/components/schemas/BodyMessage" }
+        # The name of the user who sent the message
+        sender_name: { $ref: "#/components/schemas/Name" }
+    Message:
+      oneOf:
+        - $ref: "#/components/schemas/SentMessage"
+        - $ref: "#/components/schemas/RcvMessage"
+    Group:
+      title: Group
+      description: Group in which various users write each other
+      type: object
+      properties:
+        groupname: { $ref: "#/components/schemas/Name" }
+        groupimg: { $ref: "#/components/schemas/Photo" }
+        groupid: { $ref: "#/components/schemas/Identification" }
+        # List of members participating in the group
+        users: { $ref: "#/components/schemas/ProfilesList" }
+      required:
+        - groupname
+        - groupid
+        - users
+    InnerConv:
+      title: Inner conversation
+      description: Conversation with all message
+      type: object
+      properties:
+        conv_id: { $ref: "#/components/schemas/Identification" }
+        messages:
+          type: array
+          description: All messages of the conversation
+          items: { $ref: "#/components/schemas/Message" }
+          minItems: 0
+          maxItems: 100
+    Conversation:
+      title: Conversation
+      description: Conversation is in a group or between two users
+      type: object
+      properties:
+        conv_id: { $ref: "#/components/schemas/Identification" }
+        last_msg: { $ref: "#/components/schemas/Message" }
+    ConversationCollection:
+      title: List of conversation
+      description: All conversation of a user
+      type: object
+      properties:
+        conversations:
+          type: array
+          description: Contain all conversation of the user
+          items: { $ref: "#/components/schemas/Conversation" }
+          minItems: 0
+          maxItems: 100
+      required:
+        - conversations
+    # Used for the Error responses (40x and 50x)
+    Error:
+      description: Object describe an error with the code and the message
+      type: object
+      properties:
+        errors:
+          description: Array of error codes generated by the operation
+          type: array
+          items:
+            type: object
+            description: Description of the error
+            properties:
+              code:
+                description: Code error
+                type: integer
+                enum: [400, 401, 403, 404, 500]
+                example: 404
+              reason:
+                type: string
+                description: Explanation of the reason for the error which can be shown to a client user
+                pattern: "^.*?$"
+                example: Page not found
+                minLength: 1
+                maxLength: 100
+              message:
+                type: string
+                description: More details of the error
+                pattern: "^.*?$"
+                example: "The requested URL was not found"
+                minLength: 1
+                maxLength: 100
+            required:
+              - code
+              - reason
+          minItems: 1
+          maxItems: 100
+      required:
+        - errors
 
-    commentId:
-      name: commentId
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: "^[a-zA-Z0-9_-]+$"
-        minLength: 1
-        maxLength: 64
-        example: "comment789"
-      description: "Unique identifier of the comment to be removed"
-
-    isGroupChat:
-      name: isGroupChat
-      in: query
-      required: true
-      schema:
-        type: boolean
-      description: "Indicates if the chat is a group chat"
-      
-    messageId:
-      name: messageId
-      in: path
-      required: true
-      schema:
-        type: string
-        example: "message789"
-        pattern: "^[a-zA-Z0-9_-]+$"
-        minLength: 1
-        maxLength: 64
-      description: "Unique identifier of the message to be removed"
-  
-  
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
 
-security:
-  - bearerAuth: []
-
-paths:
-  ### LOGIN SECTION ###
-  /session:
-    post:
-      tags: ["login"]
-      summary: "Logs in the user"
-      description: >-
-        If the user does not exist, it will be created, and an identifier is returned.
-        If the user exists, the user identifier is returned.
-      operationId: doLogin
-      requestBody:
-        description: "User details"
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: "Maria"
-                  minLength: 3
-                  maxLength: 16
-      responses:
-        '201':
-          description: "User successfully logged in or created"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  identifier:
-                    type: string
-                    example: "abcdef012345"
-        '400':
-          description: "Invalid input data"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid name format. Name must be between 3 and 16 characters."
-        '500':
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "An unexpected error occurred."
-
-
-  ### CHATS SECTION ###
-  /chats:
-    get:
-      tags: ["chats"]
-      summary: "Retrieve user conversations"
-      operationId: getMyConversations
-      responses:
-        "200":
-          description: "Conversations retrieved successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        identifier:
-                          type: string
-                          description: "Unique conversation ID"
-                        name:
-                          type: string
-                          description: "Chat or group name"
-                        participants:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              userId:
-                                type: string
-                              username:
-                                type: string
-                        lastMessage:
-                          type: string
-                        lastMessageTimestamp:
-                          type: string
-                          format: date-time
-                        isGroupChat:
-                          type: boolean
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-  /chats/{sourceChatId}:
-    get:
-      tags: ["chats"]
-      summary: "Retrieve specific chat details"
-      operationId: getConversation
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-      responses:
-        "200":
-          description: "Chat details retrieved successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  identifier:
-                    type: string
-                  name:
-                    type: string
-                  participants:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        userId:
-                          type: string
-                        username:
-                          type: string
-                  lastMessage:
-                    type: string
-                  lastMessageTimestamp:
-                    type: string
-                    format: date-time
-                  isGroupChat:
-                    type: boolean
-        "404":
-          description: "Chat not found"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    pattern: "^[a-zA-Z0-9_-]+$"
-                    example: "Chat not found"      
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-                    
-  /chats/{sourceChatId}/messages:
-    post:
-      tags: ["chats"]
-      summary: "Send a message in a chat"
-      operationId: sendMessage
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                senderId:
-                  type: string
-                  description: "Unique ID of the sender"
-                text:
-                  type: string
-                  description: "Optional text message"
-                file:
-                  type: string
-                  format: binary
-                  description: "Image or video file"
-                mediaType:
-                  type: string
-                  enum: ["text", "image", "video"]
-                  description: "Type of content being sent"
-                timestamp:
-                  type: string
-                  format: date-time
-                  description: "Time when the message was sent"
-      responses:
-        "201":
-          description: "Message sent successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  messageId:
-                    type: string
-        "400":
-          description: "Invalid input data"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid file format"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to upload the file due to a server error."
-
-  /chats/{sourceChatId}/Fmessages/{targetChatId}:
-    post:
-      tags: ["chats"]
-      summary: "Forward a message from a specific chat to another specific chat"
-      description: |
-        Allows a user to forward a message from a specified source chat to a specified target chat.
-      operationId: forwardMessage
-      parameters:
-        - name: sourceChatId
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "sourceChat123"
-          description: "Unique identifier of the source chat"
-        - name: targetChatId
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "targetChat456"
-          description: "Unique identifier of the target chat"
-      requestBody:
-        description: "Details of the message to be forwarded"
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                messageId:
-                  type: string
-                  description: "Unique identifier of the message being forwarded"
-                  example: "msg789"
-                senderId:
-                  type: string
-                  description: "Unique identifier of the sender forwarding the message"
-                  example: "user123"
-                originalTimestamp:
-                  type: string
-                  format: date-time
-                  description: "Timestamp of when the original message was sent, in ISO 8601 format"
-                  example: "2023-11-01T12:00:00Z"
-              required:
-                - messageId
-                - senderId
-      responses:
-        "201":
-          description: "Message successfully forwarded"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  forwardedMessageId:
-                    type: string
-                    description: "Unique identifier of the forwarded message in the target chat"
-                    example: "forwardedMsg101"
-                  status:
-                    type: string
-                    description: "Status of the message forwarding action"
-                    example: "Forwarded"
-  /chats/{sourceChatId}/Dmessage/{messageId}:
-    delete:
-      tags: ["chats"]
-      summary: "Remove a specific message within the same chat"
-      operationId: deleteMessage
-      parameters:
-        - $ref: "#/components/parameters/sourceChatId"
-        - $ref: "#/components/parameters/messageId"
-      responses:
-        "204":
-          description: "message successfully deleted"
-        "404":
-          description: "message not found"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "message not found"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the message status due to a server error."
-
-
-
-  /chats/{sourceChatId}/Agroup:
-    post:
-      tags: ["chats"]
-      summary: "Add user to group chat"
-      operationId: addToGroup
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: string
-                role:
-                  type: string
-                  enum: ["member", "admin"]
-      responses:
-        "201":
-          description: "User added to group successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "User added to group successfully"
-        "400":
-          description: "Invalid input data"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid role specified"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    pattern: "^[a-zA-Z0-9_-]+$"
-                    example: "Unable to update the photo due to a server error."
-
-  /chats/{sourceChatId}/comment:
-    post:
-      tags: ["chats"]
-      summary: "Comment on a specific message within the same chat"
-      operationId: commentMessage
-      parameters:
-        - $ref: "#/components/parameters/sourceChatId"
-      requestBody:
-        description: "Message content and the comment to post"
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                senderId:
-                  type: string
-                  description: "Unique identifier of the sender"
-                  example: "user123"
-                content:
-                  type: "string"
-                  format: "emoji"
-                  pattern: "^[\u1F600-\u1F64F\u1F300-\u1F5FF]+$"
-                  minLength: 1
-      responses:
-        "201":
-          description: "Message successfully commented"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  messageId:
-                    type: string
-                    description: "Unique identifier of the commented message"
-                    example: "msg789"
-                  status:
-                    type: string
-                    example: "Sent"
-        "404":
-          description: "Message not found"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Message not found"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-
-  /chats/{sourceChatId}/uncomment/{commentId}:
-    delete:
-      tags: ["chats"]
-      summary: "Remove a specific comment from a message within the same chat"
-      operationId: uncommentMessage
-      parameters:
-        - $ref: "#/components/parameters/sourceChatId"
-        - $ref: "#/components/parameters/commentId"
-      responses:
-        "204":
-          description: "Comment successfully deleted"
-        "404":
-          description: "Comment not found"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Comment not found"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-  /chats/{sourceChatId}/Dgroup:
-    delete:
-      tags: ["chats"]
-      summary: "Leave a group chat"
-      operationId: leaveGroup
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-      responses:
-        "204":
-          description: "Left group successfully"
-        "404":
-          description: "Group not found"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Group not found"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-  /chats/{sourceChatId}/Grouphoto:
-    post:
-      tags: ["chats"]
-      summary: "Change the group photo"
-      operationId: setGroupPhoto
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-        - $ref: '#/components/parameters/isGroupChat'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data: 
-            schema:
-              type: object
-              properties:
-                photo:
-                  type: string
-                  format: binary
-                  description: "The new group photo to be uploaded"
-                description:
-                  type: string
-                  example: "This is our updated group photo."
-      responses:
-        "200":
-          description: "Group photo successfully updated"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "Group photo updated successfully"
-                  photoUrl:
-                    type: string
-                    format: uri
-                    example: "https://example.com/images/group-photo.jpg"
-        "400":
-          description: "Invalid file format"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid file format. Only JPEG and PNG are allowed."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-  /chats/{sourceChatId}/Groupname:
-    post:
-      tags: ["chats"]
-      summary: "Change the group name"
-      operationId: setGroupName
-      parameters:
-        - $ref: '#/components/parameters/sourceChatId'
-        - $ref: '#/components/parameters/isGroupChat'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                content:
-                  type: string
-                  description: "New group name"
-      responses:
-        "200":
-          description: "Group name successfully updated"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "Group name updated successfully"
-        "400":
-          description: "Invalid name format"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid name format"
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-
-### SETTINGS SECTION ###
-  /settings:
-    get:
-      tags: ["settings"]
-      summary: "Retrieve user settings"
-      operationId: getUserSettings
-      responses:
-        "200":
-          description: "Settings retrieved successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  settings:
-                    type: object
-                    properties:
-                      theme:
-                        type: string
-                        example: "dark"
-                      notifications:
-                        type: boolean
-                        example: true
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to retrieve settings due to a server error."
-
-    post:
-      tags: ["settings"]
-      summary: "Update user settings"
-      operationId: updateUserSettings
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                theme:
-                  type: string
-                  description: "The theme for the user interface"
-                  example: "light"
-                notifications:
-                  type: boolean
-                  description: "Whether notifications are enabled"
-                  example: false
-      responses:
-        "200":
-          description: "Settings updated successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "Settings updated successfully"
-        "400":
-          description: "Invalid input data"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid theme value provided."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update settings due to a server error."
-
-  /settings/userphoto:
-    post:
-      tags: ["settings"]
-      summary: "Update user photo"
-      operationId: setMyPhoto
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                photo:
-                  type: string
-                  format: binary
-                  description: "The new user photo to be uploaded"
-                description:
-                  type: string
-                  example: "This is my new profile photo."
-                  description: "Optional description or metadata for the photo"
-      responses:
-        "200":
-          description: "User photo updated successfully"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "User photo updated successfully"
-                  photoUrl:
-                    type: string
-                    format: uri
-                    description: "URL of the updated user photo"
-                    example: "https://example.com/images/user-photo.jpg"
-        "400":
-          description: "Invalid file format"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid file format. Only JPEG and PNG are allowed."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unable to update the photo due to a server error."
-
-
-  /settings/username:
-      post:
-        tags: ["settings"]
-        summary: "Set the username"
-        description: >-
-          Users can set up their username, or a default will be generated.
-        operationId: setMyUserName
-        requestBody:
-          description: "Set your username"
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    example: ".JohnDoe_24-$"
-                    pattern: "^[a-zA-Z0-9._]+$"
-                    minLength: 3
-                    maxLength: 32
-        responses:
-          '201':
-            description: "Username successfully set"
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    identifier:
-                      type: string
-                      example: ".JohnDoe_24-$"
-          '400':
-            description: "Invalid username format"
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "Username contains invalid characters or does not meet length requirements."
-          '409':
-            description: "Username already exists"
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "The username is already taken. Please choose another."
-          '500':
-            description: "Internal server error"
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "An unexpected error occurred."
+  responses:
+    BadRequest:
+      description: The request was not compliant with the documentation (eg. missing fields, etc)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: The access token is missing or it's expired
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: The user is not allowed to perform the action
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Element not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    InternalServerError:
+      description: The server encountered an internal error. Further info in server logs
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
