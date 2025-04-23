@@ -27,11 +27,11 @@ export default {
         });
 
         // Salva i dati dell'utente nella sessionStorage
-        sessionStorage.userID = response.data.userId;
+        sessionStorage.userID = response.data.user.UserId;
         sessionStorage.username = response.data.user.username;
-        sessionStorage.token = response.data.userId;
-        sessionStorage.photo = response.data.photo;
-        console.log("UserID lo riesco a prendere?",response.data.userId,"User Photo",response.userphoto )
+        sessionStorage.token = response.data.user.UserId;
+        sessionStorage.photo = response.data.user.Photo;
+        console.log("Response:",response,"UserID lo riesco a prendere?",response.data.user.UserId,"User Photo",response.data.user.Photo )
         // Reindirizza l'utente alla home
         this.$router.push("/home");
         // Emette l'evento di login avvenuto con successo

@@ -22,6 +22,7 @@ type Message struct {
 	SendTime       time.Time `json:"sendTime"`
 	Status         string    `json:"status"`
 	SenderUserId   string    `json:"senderUserId"`
+	SenderUserName string 	`json:"senderuserName"`
 	ConversationId string       `json:"conversationId"`
 	Photo          string    `json:"photo"`
 }

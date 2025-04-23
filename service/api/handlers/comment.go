@@ -66,6 +66,7 @@ func CommentMessageHandler(db database.AppDatabase) http.HandlerFunc {
 	}
 }
 
+
 func DeleteCommentHandler(db database.AppDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

@@ -83,7 +83,6 @@ export default {
           Users: this.selectedUsers,
         }, { headers: { 'Authorization': `${sessionStorage.token}` } });
         // Salva i dati del gruppo in localStorage e reindirizza l'utente alla pagina del gruppo aggiornata
-        localStorage.clear();
         localStorage.users = JSON.stringify(response.data.members);
         // Chiude il modale
       

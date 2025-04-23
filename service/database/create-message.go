@@ -19,6 +19,7 @@ func (db *appdbimpl) CreateMessage(msg structs.Message) (structs.Message, error)
 	newMsg.MessageId = newUUID
 	newMsg.Status = msg.Status
 	newMsg.SenderUserId = msg.SenderUserId
+	newMsg.SenderUserName = msg.SenderUserName
 	newMsg.Photo = msg.Photo
 	newMsg.ConversationId = msg.ConversationId
 	log.Printf("Text %s", newMsg.Text, "MessageId%s", newMsg.MessageId, "Status%s", newMsg.Status, "SenderUSerId%s", newMsg.SenderUserId,"Photo%s", newMsg.Photo, "ConversationId%s", newMsg.ConversationId )
@@ -37,6 +38,7 @@ func (db *appdbimpl) CreateMessage(msg structs.Message) (structs.Message, error)
 		SendTime:       newMsg.SendTime,
 		Status:         newMsg.Status,
 		SenderUserId:   newMsg.SenderUserId,
+		SenderUserName: newMsg.SenderUserName,
 		ConversationId: newMsg.ConversationId,
 		Photo:          newMsg.Photo,
 	}, nil

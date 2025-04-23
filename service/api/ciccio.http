@@ -24,7 +24,7 @@ POST http://localhost:3000/session  HTTP/1.1
 content-type: application/json
 
 {
-    "name": "ciz"
+    "name": "Frinco"
 }
 
 ###
@@ -195,7 +195,7 @@ content-type: application/json
 DELETE http://localhost:3000/chats/ac0e7287-3cb3-417f-8a84-0c42f4181640/00839a7f-d4c1-494e-acfd-9eef4beec9f4/comment/4d237398-18dd-4e82-9897-8a17de946a48 HTTP/1.1
 Authorization: 1
 content-type: application/json
+###
 
-#Search
-GET http://localhost:3000/search/users?name=mattia     HTTP/1.1
+GET http://localhost:3000/session/getuser/70fe6517-1bf4-4a92-bebb-7958586c4226 HTTP/1.1
 Authorization: 1

@@ -20,7 +20,7 @@ func (rt *_router) Handler() http.Handler {
 	// Session routes
 	router.HandleFunc("/session", handlers.LoginHandler(rt.db)).Methods("POST")
 	router.HandleFunc("/search/users", handlers.SearchUserHandler(rt.db)).Methods("GET")
-
+	router.HandleFunc("/session/getuser/{Id}", handlers.GetUser(rt.db)).Methods("GET")
 	// Chat routes
 	router.HandleFunc("/chats/{id}", handlers.RetrieveChatsHandler(rt.db)).Methods("GET")
 	router.HandleFunc("/chats/{id}/{sourceChatId}", handlers.GetConversationByIdHandler(rt.db)).Methods("GET")

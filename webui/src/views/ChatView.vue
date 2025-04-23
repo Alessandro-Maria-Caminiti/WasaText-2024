@@ -70,7 +70,7 @@ export default {
     async handleFileChange(event) {
       this.errorMsg = "";
       const file = event.target.files[0]; // Prende il file inserito dall'utente
-      if (file.type !== "image/jpeg") {
+      if (file.type !== "jpeg" || file.type !== "png") {
         this.errorMsg = "File type not supported, only jpg and jpeg are allowed";
         return
       }
@@ -246,7 +246,7 @@ beforeUnmount() {
       class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
       <!-- User photo -->
       <div class="top-profile-container">
-        <img :src="`data:image;base64,${proPic64}`">
+        <img :src="`data:image/jpg;base64,${proPic64}`">
       </div>
       <!-- Controlla se la conversazione è con un gruppo o con un utente -->
       <div v-if="isGroup">

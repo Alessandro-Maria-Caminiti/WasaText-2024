@@ -9,7 +9,7 @@ import (
 )
 
 // Query per aggiungere un nuovo utente
-var Adduser = "INSERT INTO user (UserId, Username) VALUES (?, ?);"
+var Adduser = "INSERT INTO user (UserId, Username, profile_image) VALUES (?, ?, ?);"
 
 func (db *appdbimpl) CreateUser(u User) (User, error) {
     var user User
@@ -52,8 +52,14 @@ func (db *appdbimpl) CreateUser(u User) (User, error) {
     }
 
     fmt.Println("✅ Foto profilo copiata con successo!")
-
-    _, err = db.c.Exec(Adduser, user.UserId, user.Username)
+    fotina, err := images.ImageToBase64(profilePhotoPath)
+    if err != nil{
+        fmt.Println("ERRORE IMPOSSIBILE CONVERTIRE FOTO")
+        return user, fmt.Errorf("error converting profile photo: %w", err)
+    }
+    user.Photo = fotina
+    fmt.Println("%v", user.Photo)
+    _, err = db.c.Exec(Adduser, user.UserId, user.Username, user.Photo)
     if err != nil {
         fmt.Println("❌ ERRORE: impossibile inserire utente nel database:", err)
         return user, fmt.Errorf("error inserting user into database: %w", err)

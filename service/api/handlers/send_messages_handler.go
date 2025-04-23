@@ -37,6 +37,12 @@ func SendMessageHandler(database database.AppDatabase) http.HandlerFunc {
 		return
 	}
 
+	user, err := database.GetUserById(senderID) 
+	if err != nil{
+		respondWithErrorsndmsg(w, http.StatusInternalServerError, "Errore nella ricerca di chi ha mandato il messaggio")
+		return
+	}
+
 	content := r.FormValue("content")
 	var filePath string // Definiamo la variabile filePath prima dell'uso
 
@@ -58,11 +64,12 @@ func SendMessageHandler(database database.AppDatabase) http.HandlerFunc {
 	}
 
 
-	log.Printf(content)
+	log.Printf(user.Username)
 
 	// Crea la struttura del messaggio
 	newMessage := structs.Message{
 		SenderUserId:   senderID,
+		SenderUserName: user.Username,
 		ConversationId: conversationId,
 		Text:           content,
 		Photo:          filePath, // Se il messaggio contiene un file, salviamo il percorso
@@ -77,7 +84,7 @@ func SendMessageHandler(database database.AppDatabase) http.HandlerFunc {
 		respondWithErrorsndmsg(w, http.StatusInternalServerError, "Errore nell'invio del messaggio")
 		return
 	}
-	log.Printf(savedMessage.ConversationId)
+	log.Printf("%v",savedMessage)
 
 	// Rispondi con il messaggio salvato
 	w.Header().Set("Content-Type", "application/json")

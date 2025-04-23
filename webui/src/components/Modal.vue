@@ -72,7 +72,7 @@ export default {
     
     // Funzione utilizzara per selezionare l'utente con cui aprire una conversazione
     async selectUser(userToSend, username, photo) {
-      localStorage.clear()
+      
       localStorage.userID = userToSend;
       console.log(localStorage.userID)
       localStorage.username = username;

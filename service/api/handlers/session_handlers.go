@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"fmt"
-	"wasatext/service/api/images"
 	"wasatext/service/api/models"
 	"wasatext/service/database"
 )
@@ -67,12 +66,7 @@ func LoginHandler(db database.AppDatabase) http.HandlerFunc {
 		}
 
 		userId = createdUser.UserId
-	}
-	userphoto, err := images.ImageToBase64(images.SetDefaultPhoto(userId))
-	if err != nil{
-		http.Error(w,"Error setting Default Photo", http.StatusInternalServerError)
-	}
-	// Ottieni informazioni complete dell'utente
+	}	
 	user, err = db.GetUserById(userId)
 	log.Printf(userId)
 	if err != nil {
@@ -80,14 +74,12 @@ func LoginHandler(db database.AppDatabase) http.HandlerFunc {
 		http.Error(w, "Error retrieving user data", http.StatusInternalServerError)
 		return
 	}
-
 	// Risposta con le informazioni dell'utente
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "Login successful",
 		"user":   user,
-		"userId": userId, 
-		"photo": userphoto,
 	})
 }
 }
+
