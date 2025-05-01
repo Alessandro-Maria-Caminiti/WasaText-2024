@@ -21,7 +21,6 @@ Return values (exit codes):
 Note that this program will update the schema of the database to the latest version available (embedded in the
 executable during the build).
 */
-
 package main
 
 import (
@@ -29,27 +28,22 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"WasaText/service/api"
+	"WasaText/service/database"
+	"WasaText/service/globaltime"
 	"github.com/ardanlabs/conf"
-	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 	"math/rand"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
-	"wasatext/service/api"
-	"wasatext/service/database"
-	"wasatext/service/globaltime"
 )
 
 // main is the program entry point. The only purpose of this function is to call run() and set the exit code if there is
 // any error
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile) // Abilita log dettagliati
-	log.Println("🔄 Applicazione avviata...")
 	if err := run(); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "error: ", err)
 		os.Exit(1)
@@ -86,19 +80,9 @@ func run() error {
 
 	logger.Infof("application initializing")
 
-	var regex = func(re, s string) (bool, error) {
-		return regexp.MatchString(re, s)
-	}
-	sql.Register("sqlite3_extended",
-		&sqlite3.SQLiteDriver{
-			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-				return conn.RegisterFunc("regexp", regex, true)
-			},
-		})
-
 	// Start Database
 	logger.Println("initializing database support")
-	dbconn, err := sql.Open("sqlite3_extended", cfg.DB.Filename)
+	dbconn, err := sql.Open("sqlite3", cfg.DB.Filename)
 	if err != nil {
 		logger.WithError(err).Error("error opening SQLite DB")
 		return fmt.Errorf("opening SQLite: %w", err)
@@ -107,13 +91,12 @@ func run() error {
 		logger.Debug("database stopping")
 		_ = dbconn.Close()
 	}()
-	db, err := database.GetInstance(dbconn)
+	db, err := database.New(dbconn)
 	if err != nil {
 		logger.WithError(err).Error("error creating AppDatabase")
 		return fmt.Errorf("creating AppDatabase: %w", err)
 	}
-	var Adduser = "INSERT INTO user (UserId, Username) VALUES (?, ?);"
-	_, err = dbconn.Exec(Adduser, "00000000-0000-0000-0000-000000000000", "SERVER")
+
 	// Start (main) API server
 	logger.Info("initializing API server")
 

@@ -38,10 +38,10 @@ package api
 
 import (
 	"errors"
+	"WasaText/service/database"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"wasatext/service/database"
 )
 
 // Config is used to provide dependencies and configuration to the New function.
@@ -71,7 +71,6 @@ func New(cfg Config) (Router, error) {
 	if cfg.Database == nil {
 		return nil, errors.New("database is required")
 	}
-	
 
 	// Create a new router where we will register HTTP endpoints. The server will pass requests to this router to be
 	// handled.

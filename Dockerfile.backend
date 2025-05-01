@@ -1,25 +1,16 @@
-FROM golang:1.19.1 AS builder
-
-### Copy Go code
+# Create a first temporary image named "builder"
+FROM golang:1.19.8 AS builder
+# Copy Go code (in "builder")
 WORKDIR /src/
 COPY . .
-
-### Build executables
+# Build executables (in "builder")
 RUN go build -o /app/webapi ./cmd/webapi
-
-### Create final container
-FROM debian:bullseye
-
-### Inform Docker about which port is used
-EXPOSE 3000 4000
-
-### Create a directory for the storage and copy the default propic there
-RUN mkdir -p /app/storage
-COPY storage/default_profile_photo.jpg /app/storage/default_profile_photo.jpg
-
-### Copy the build executable from the builder image
+# Create final container
+FROM debian:bookworm
+# Inform Docker about which port is used
+EXPOSE 3000
+# Copy the executable from the "builder" image
 WORKDIR /app/
 COPY --from=builder /app/webapi ./
-
-### Executable command
+# Set the default program to our Go backend
 CMD ["/app/webapi"]

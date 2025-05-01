@@ -1,405 +1,247 @@
-<!-- 
+<template>
+  <div class="chat-view">
+    <!-- Header with Title and Optional Group Settings -->
+    <header class="chat-header">
+      <h1 class="chat-title">{{ $route.query.username }}</h1>
+      <button v-if="$route.query.isGroup" @click="goToGroupSettings" class="btn btn-group-settings">
+        Group Settings
+      </button>
+    </header>
 
-Pagina utilizzata per visulizzare una conversazione con un utente o con un gruppo
+    <!-- Messages -->
+    <main class="messages-container">
+      <div v-for="msg in messages" :key="msg.message_id" class="message-wrapper">
+        <IncomingMessage 
+          v-if="msg.sender === $route.query.username" 
+          :username="msg.sender"
+          :content="msg.content"
+          :timestamp="msg.timestamp"
+          :is-photo="msg.is_photo"
+          :is-forwarded="msg.is_forwarded"
+          :reactions="msg.reactions"
+          @reaction-added="handleReaction(msg.message_id, $event)"
+        />
+        <OutgoingMessage 
+          v-else 
+          :content="msg.content" 
+          :timestamp="msg.timestamp"
+          :is-photo="msg.is_photo"
+          :is-forwarded="msg.is_forwarded"
+          :reactions="msg.reactions"
+          :fully-received="msg.fully_received"
+          :fully-read="msg.fully_read"
+          @reaction-added="handleReaction(msg.message_id, $event)"
+        />
+      </div>
+    </main>
 
-L'utente loggato può:
-- inviare messaggi testuali o con foto
-- eliminare messaggi
-- inoltrare messaggi
-- lasciare commenti ai messaggi e eliminarli 
-- visualizzare i commenti ai messaggi
-- visualizzare i messaggi della conversazione
+    <!-- Message Input -->
+    <footer class="message-input-container">
+      <MessageInput @send="handleSend" @send-image="handleImageUpload" />
+    </footer>
+  </div>
+</template>
 
--->
 
 <script>
-import Modal from '../components/ModalConv.vue';
-import Comments from '../components/ModalComments.vue';
+import IncomingMessage from '@/components/IncomingMessage.vue';
+import OutgoingMessage from '@/components/OutgoingMessage.vue';
+import MessageInput from '@/components/MessageInput.vue';
+import axios from "@/services/axios";
 
 export default {
+  components: { IncomingMessage, OutgoingMessage, MessageInput },
   data() {
     return {
-      errormsg: null,
-
-      // Dati della conversazione
-      userToSend: localStorage.username,  // Nome dell'utente con cui si sta conversando o del gruppo
-      userIdToSend: localStorage.userID,  // ID dell'utente con cui si sta conversando o del gruppo
-      proPic64: localStorage.photo, // Foto dell'utente con cui si sta conversando o del gruppo
-      convId: this.$route.params.convId,  // ID della conversazione (se è una nuova conversazione, sarà undefined)
-
-      // Testo del messaggio da inviare
-      text: null,
-      // Foto del messaggio da inviare
-      photo: null,
-
-      // Lista dei messaggi della conversazione
-      some_data: [],
-
-      message: [],
-      
-      isConversationEmpty: Boolean,
-
-      // Utilizzata per verificare se si sta conversando è un gruppo o no
-      isGroup: localStorage.users ? true : false,
-
-      // Utilizzato per mostrare il modale di ricerca di una conversazione a cui inoltrare un messaggio selezionato
-      searchModalIsVisible: false,
-
-      // Utilizzato per mostrare il modale per lasciare un commento al messaggio selezionato
-      commentModalIsVisible: false,
-
-      // Messaggio da inoltrare
-      messageToFordward: null,
-
-      // Messaggio da commentare
-      messageToComment: null,
-
-      // Id dell'utente loggato
-      userId: sessionStorage.userID,
-
-      // Commenti del messaggio selezionato
-      comments: null,
-
-      // Id dell'intervallo
-      intervalId: null,
-    }
+      messages: [],
+      updateInterval: null,
+    };
   },
-  emits: ['login-success'],
-  methods: 
-  
-  
-  {
-    // Funzione utilizzata per controllare se il file inserito dall'utente è del formato corretto
-    async handleFileChange(event) {
-      this.errorMsg = "";
-      const file = event.target.files[0]; // Prende il file inserito dall'utente
-      if (file.type !== "jpeg" || file.type !== "png") {
-        this.errorMsg = "File type not supported, only jpg and jpeg are allowed";
-        return
+  methods: {
+
+    async fetchMessages() {
+      try {
+        const partnerUsername = this.$route.query.username;
+        
+        const response = await axios.get(`/conversations/${partnerUsername}`);
+        this.messages = response.data;
+      } catch (error) {
+        console.error("Error fetching messages:", error);
       }
-      if (file.size > 5242880) {
-        this.errorMsg = "File size is too big. Max size is 5MB";
-        return
-      }
-      this.photo = file;  // Assegna il file inserito dall'utente alla variabile photo
     },
 
+    goToGroupSettings() {
+      this.$router.push({
+        path: "/group-settings",
+        query: { groupname: this.$route.query.username }
+      });
+    },
 
+    async handleSend(content) {
+      try {
+        const partnerUsername = this.$route.query.username;
+        let isPhoto = false;
 
-    // Funzione che prende i messaggi della conversazione
-    async getConversation() {
-  this.errormsg = null;
-  
-  // Verifica che convid esista
-  if (!this.convId) {
-    console.error('ID conversazione non presente');
-    return;
-  }
-  
-  try {
-    const response = await this.$axios.get(`/messages/${this.convId}`, { 
-      headers: { 'Authorization': sessionStorage.token } 
-    });
-    console.log(response.data)
-    console.log(localStorage.userID)
-    // Gestisci il caso di conversazione vuota
-    if (!response.data || response.data.length === 0) {
-      console.log('Nessun messaggio nella conversazione');
-      // Puoi impostare un messaggio di default o uno stato specifico
-      this.some_data = [];
-      this.isConversationEmpty = true;
-    } else {
-      this.some_data = response.data;
-      this.isConversationEmpty = false;
-    }
-  } catch (e) {
-    this.errormsg = e.toString();
-    console.error('Errore nel recupero messaggi:', e);
-  }
-},
+        // Überprüfen, ob der Inhalt eine URL zu einem Bild ist
+        const urlMatch = content.match(/https?:\/\/.*\.(jpg|jpeg|png|gif|bmp|svg)/i);
+        if (urlMatch) {
+          isPhoto = true;
+          content = urlMatch[0];
+        }
 
+        const newMessage = {
+          message: content,
+          is_photo: isPhoto, 
+        };
 
-
-
-
-    // Funzione che controlla se la convId è stata presa correttamente dai parametri
-    async check() {
-  this.errormsg = null;
-
-  if (this.convId &&  this.convId !== undefined  || !isNaN(this.convId)) {
-    console.log("oh no o fatp dano")
-  this.sendMessage();
-  return;
-}
-
-try {
-    console.log("creo nuova conversazione perché convId non valido:", this.convId);
+        const response = await axios.post(`/conversations/${partnerUsername}`, newMessage);
+        if (!this.messages) {
+          this.messages = [];
+        }
     
-    await this.createConversation();
-    this.sendMessage();
-  } catch (e) {
-    this.errormsg = e.toString();
-  }
-},
+        this.messages.push(response.data);
 
-
-
-
-async createConversation() {
- this.errormsg = null;
-this.$axios.put(`/chats/${sessionStorage.userID}/CreatePrivateConversation/${this.userIdToSend}`, {
-headers: { 'Authorization': sessionStorage.token }
- }) .then(async response => {
-// Assegna la convId
-this.convId = response.data.conversationId;
-await this.$router.push(`/chats/${sessionStorage.userID}/${this.convId}`);
-window.location.reload();
- }) .catch (e => {
-this.errormsg = e.toString();
- })},
-
-
-
-
-// Funzione che elimina un messaggio
-async deleteMessage(msgId) {
-this.errormsg = null;
-// Effettua la richiesta al server per eliminare il messaggio selezionato
-this.$axios.delete(`/chats/${sessionStorage.userID}/${this.convId}/delete_message/${msgId}`, { headers: { 'Authorization': sessionStorage.token } })
- .then(() => {
- })
- .catch(e => {
-this.errormsg = e.toString();
- });
- },
-
-
-
-
-    async sendMessage() {
-  this.errormsg = null;
-  console.log("Invio messaggio con text:", this.text, "photo:", this.photo);
-
-  const formData = new FormData();
-  formData.append('content', this.text);
-  if (this.photo) {
-    formData.append('file', this.photo);
-  }
-  console.log(formData.entries)
-
-  this.$axios.post(`/chats/${sessionStorage.userID}/${this.convId}/messages`, formData, { 
-    headers: { 'Authorization': sessionStorage.token } 
-  })
-  .then(response => {
-    console.log("Messaggio inviato correttamente:", response.data);
-  })
-  .catch(e => {
-    console.error("Errore nel POST /messages:", e.response);
-    this.errormsg = e.toString();
-  });
-},
-    // Funzione utilizzata per mostrare o nascondere il modale per lasciare un commento al messaggio selezionato
-    handleCommentModalToggle(cmt) {
-      // Assegna il messaggio selezionato e i commenti del messaggio selezionato alle variabili messageToComment e comments
-      this.messageToComment = cmt;
-      // Mostra o nasconde il modale
-      this.commentModalIsVisible = !this.commentModalIsVisible;
-    },
-    // Funzione utilizzata per mostrare o nascondere il modale per inoltrare un messaggio selezionato
-    handleSearchModalToggle(msg) {
-      // Assegna il messaggio selezionato alla variabile messageToFordward
-      this.messageToFordward = msg;
-      // Mostra o nasconde il modale
-      this.searchModalIsVisible = !this.searchModalIsVisible;
-    },
-    // Funzione utlizzata per andare alla pagina delle infromazioni di un gruppo (utilizzata solo nel caso in cui la conversazione è con un gruppo)
-    goToGroupInfo() {
-      // Reindirizza alla pagina delle informazioni del gruppo
-      this.$router.push(`/chats/${sessionStorage.userID}/${this.convId}/GetGroup`);
+        this.fetchMessages()
+        
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     },
 
+    async handleImageUpload(imageFile) {
+      try {
+        const formData = new FormData();
+        formData.append("image", imageFile);
 
-
-
-
-    // Funzione che rimuove il commento dell'utente loggato
-    async uncommentMessage(cmtId) {
-      this.errormsg = null;
-      // Effettua una richietsa DELETE per rimuovere il commento dell'utente loggato
-      const url = `/chats/${sessionStorage.userID}/${this.convId}/comment/${cmtId}`;
-      this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token } })
-        .then(() => {
-        })
-        .catch(e => {
-          this.errormsg = e.toString();
+        // Upload an das Backend
+        const uploadResponse = await axios.post("/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
+
+        const imageUrl = uploadResponse.data.imageUrl;
+
+        // Bild als Nachricht senden
+        this.handleSend(imageUrl);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
     },
+
+    async handleReaction(messageId, reaction) {
+
+      // Find message and add Reaktion
+      const message = this.messages.find(msg => msg.message_id === messageId);
+
+      if (!message) {
+        console.error(`Message with ID ${messageId} not found!`);
+        return;
+      }
+
+      // Sicherstellen, dass `reactions` existiert
+      if (!message.reactions) {
+        message.reactions = [];
+      }
+
+      // Reaktion hinzufügen
+      message.reactions.push(reaction);
+
+      // Send reaction to server
+      try {
+
+        await axios.put(`/conversations/messages/${messageId}/comment`, reaction);
+
+        await this.fetchMessages();
+
+      } catch (error) {
+
+        console.error("Error sending reaction:", error);
+
+      }
+    },
+
   },
 
   mounted() {
-  if (!sessionStorage.token) {
-    this.$router.push("/");
-    return;
-  }
-  
-  // Assicurati che convid esista prima di chiamare getConversation
-  if (this.convId) {
-    this.getConversation();
-    
-    // Riduce l'intervallo e aggiunge un controllo
-    this.intervalId = setInterval(() => {
-      if (this.convId) {
-        this.getConversation();
-      }
-    }, 1000); 
-  } else {
-    console.error('ID conversazione mancante');
-  }
-},
-beforeUnmount() {
-    // Pulisci l'intervallo quando il componente viene distrutto
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
+    this.fetchMessages();
+
+    this.updateInterval = setInterval(() => {
+      this.fetchMessages();
+    }, 10000);
+  },
+
+  beforeUnmount() {
+    // Delete the Interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
     }
   },
-  components: { Modal, Comments },
-}
+};
 </script>
 
-<template>
-  <div>
-    <div
-      class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <!-- User photo -->
-      <div class="top-profile-container">
-        <img :src="`data:image/jpg;base64,${proPic64}`">
-      </div>
-      <!-- Controlla se la conversazione è con un gruppo o con un utente -->
-      <div v-if="isGroup !== null">
-        <!-- Se è un gruppo mostra il nome del gruppo -->
-        <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.userToSend }}</h1>
-      </div>
-      <div v-else>
-        <!-- Se è un utente mostra il nome dell'utente -->
-        <h1 class="h1">{{ this.userToSend }}</h1>
-      </div>
-
-      <!-- Modali della pagina -->
-
-      <!-- Modale utilizzato per lasciare un commento a un messaggio -->
-      <Comments :show="commentModalIsVisible" :msg="messageToComment"
-        @close="handleCommentModalToggle" title="comments">
-        <template>
-          <h3>Comments</h3>
-        </template>
-      </Comments>
-      <!-- Modale utilizzato per selezionare una conversazione in cui inoltrare un messaggio -->
-      <Modal :show="searchModalIsVisible" :msg="messageToFordward" @close="handleSearchModalToggle"
-        title="conversations">
-        <template v-slot:header>
-          <h3>Conversations</h3>
-        </template>
-      </Modal>
-
-      <!-- Body della pagina -->
-      <div class="btn-toolbar mb-2 mb-md-0">
-        <!-- Form per inviare una foto -->
-        <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-        <!-- Input per invaire un messaggio testuale -->
-        <div class="input-group">
-          <input type="text" class="form-control" v-model="text" placeholder="Type your message here">
-          <button class="btn btn-outline-primary" @click="check">Send</button>
-        </div>
-      </div>
-    </div>
-
-    <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
-
-    <!-- Resto del codice -->
-    
-    <!-- Messaggio per conversazioni vuote -->
-    <div v-if="isConversationEmpty" class="empty-conversation-message">
-      Non ci sono ancora messaggi in questa conversazione. 
-      Inizia a chattare!
-    </div>
-
-<!-- Lista dei messaggi della conversazione -->
-<div class="messages" v-for="msg in some_data" :key="msg.messageId">
-
-  <!-- Mittente -->
-  <p v-if="msg.text !== 'null' || msg.photo !== ''">
-    {{ msg.SenderUserId }}
-  </p>
-
-  <!-- Testo del messaggio -->
-  <p v-if="msg.text && msg.text !== 'null'">
-    {{ msg.text }}
-  </p>
-
-  <!-- Foto allegata -->
-  <img class="msg_photo" v-if="msg.photo" :src="`data:image/jpg;base64,${msg.photo}`" alt="Message Photo">
-
-  <!-- Data e stato -->
-  <p v-if="msg.text !== 'null' || msg.photo !== ''">
-    {{ msg.timeMsg }}
-    <span v-if="msg.status === 'Sended'">✔️</span>
-    <span v-if="msg.status === 'read'">✔️✔️</span>
-  </p>
-
-  <!-- Commenti -->
-  <div v-for="cmt in msg.comments" :key="cmt.commentId">
-    <p>{{ cmt.comment }} : {{ cmt.commentUsername }}</p>
-    <button v-if="cmt.commentUserId == userId" type="button" class="btn btn-sm btn-outline-secondary"
-      @click="uncommentMessage(cmt.commentId)">
-      Delete comment
-    </button>
-  </div>
-
-  <!-- Azioni -->
-  <div class="btn-group me-2">
-    <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleSearchModalToggle(msg)">
-      Forward Message
-    </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(msg.MessageId)">
-      Delete message
-    </button>
-    <button v-if="msg.SenderUserId != userId" type="button" class="btn btn-sm btn-outline-secondary"
-      @click="handleCommentModalToggle(msg)">
-      Comment message
-    </button>
-  </div>
-
-  <hr v-if="msg.text !== 'null' || msg.photo !== ''">
-</div>
-</div>
-</template>
-
-<style>
-/* Stile utilizzato per visualizzare l'immagine profilo dell'utente o del gruppo con cui si sta conversando */
-.top-profile-container {
-  width: auto;
-  height: auto;
-
+<style scoped>
+.chat-view {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  height: 100vh;
+  background: #f3f4f6; /* Light gray background */
+  font-family: 'Inter', sans-serif;
+  color: #1f2937;
+}
+
+.chat-header {
+  display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-/* Stile utilizzato per visualizzare la foto di un messaggio */
-.msg_photo {
-  width: 25%;
-  height: 25%;
+.chat-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
 }
 
-/* Stile utilizzato nel caso in cui la conversazione è con un gruppo */
-.clickable {
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   cursor: pointer;
-  color: blue;
-  text-decoration: underline;
+  transition: background-color 0.2s ease;
 }
 
-.clickable:hover {
-  color: darkblue;
+.btn-group-settings {
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
 }
+
+.btn-group-settings:hover {
+  background-color: #2563eb; /* blue-600 */
+}
+
+.messages-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #e5e7eb; /* Light gray */
+}
+
+.message-wrapper {
+  display: flex;
+}
+
+.message-input-container {
+  padding: 12px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+}
+
 </style>
