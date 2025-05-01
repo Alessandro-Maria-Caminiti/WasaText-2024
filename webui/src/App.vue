@@ -53,7 +53,8 @@ export default {
     async handleFileChange(event) {
       this.errorMsg = "";
       const file = event.target.files[0]; // Prende il file inserito dall'utente
-      if (file.type !== "image/jpeg" || file.type !== "png") {
+      if (file.type !== "image/jpeg") {
+        console.log(file.type);
         this.errorMsg = "File type not supported, only jpg and jpeg are allowed";
         return
       }
@@ -88,7 +89,8 @@ export default {
       // Effettua una richiesta PUT al server per l'aggiornamento della foto profilo
       this.$axios.put(`/settings/${sessionStorage.userID}/userphoto`, formData, { headers: { 'Authorization': `${sessionStorage.token}` } })
         .then(response => {
-          this.photo = response.data.user.photo; // Assegna la nuova immagine del profilo alla variabile photo per l'aggiornamento della pagina
+          console.log(response.data.photo)
+          this.photo = response.data.photo; // Assegna la nuova immagine del profilo alla variabile photo per l'aggiornamento della pagina
           if (this.photo == undefined){
             console.log("perché non funziono?")
           }

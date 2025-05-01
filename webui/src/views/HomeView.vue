@@ -62,17 +62,19 @@ export default {
     this.errormsg = "Errore: conversazione non trovata.";
   }
   // Se è una conversazione di gruppo
-  if (response.group && response.group.groupId !== 0) {
+  if (!response.group && response.group.groupId !== 0) {
     localStorage.userID = response.group.groupId;
     localStorage.username = response.group.groupName;
     localStorage.photo = response.data.group.photo;
     localStorage.users = JSON.stringify(response.groupUsers);
   } 
   // Se è una conversazione privata
-  else if (response.user) {
-    localStorage.userID = response.data.user.UserId;
-    localStorage.username = response.data.user.username;
-    localStorage.photo = response.data.user.Photo;
+  else if (!response.user) {
+    localStorage.userID = response.data.usertosend.UserId;
+    localStorage.username = response.data.usertosend.username;
+    localStorage.photo = response.data.usertosend.Photo;
+
+    
   }
 
 
@@ -162,11 +164,11 @@ export default {
           <!-- Se il messaggio è una foto, mostra "Photo" al posto del testo -->
           <button v-if="response.message.photo == ''" type="button" class="btn btn-sm btn-outline-primary"
             @click="goToConversation(response)">
-            {{ response.User_to_send.username }} <br> {{ response.message.senderuserName }}: {{ response.message.text }}
+            {{ response.usertosend.username }} <br> {{ response.message.senderuserName }}: {{ response.message.text }}
           </button>
           <!-- Altrimenti mostra il contenuto del messaggio -->
           <button type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(response)" v-else>
-            {{ response.User_to_send.username }} <br> {{ response.message.senderuserName}}: Photo
+            {{ response.usertosend.username }} <br> {{ response.message.senderuserName}}: Photo
           </button>
         </div>
         <!-- Se la conversazione è con un gruppo -->

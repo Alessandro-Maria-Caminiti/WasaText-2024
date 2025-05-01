@@ -47,7 +47,7 @@ Authorization: 5
 ### 
 
 # SET PROFILE PHOTO #
-PUT http://localhost:3000/settings/9037fc1d-77b1-43dc-8a57-d757ca8c3dbb/userphoto HTTP/1.1
+PUT http://localhost:3000/settings/e2122bab-c201-4065-a929-ff47b819acc0/userphoto HTTP/1.1
 Authorization: 1
 Content-Type: multipart/form-data; boundary=----BOUNDARY_STRING
 
@@ -123,7 +123,7 @@ Content-Type: image/jpeg
 
 # CREATE CONVERSATION #
 
-PUT http://localhost:3000/chats/b0bee855-57ad-4c98-9ee2-376a84c3b1f0/CreatePrivateConversation/ab090ae4-744b-4d7e-8291-1fea7cfddeb0  HTTP/1.1
+PUT http://localhost:3000/chats/e2122bab-c201-4065-a929-ff47b819acc0/CreatePrivateConversation/827a8653-4d6e-4b29-9f03-ff0b5f592f9d  HTTP/1.1
 Authorization: 1
 
 
@@ -133,7 +133,7 @@ Authorization: 1
 
 # GET CONVERSATIONS #
 ### GET chats with path param (se cambi il router)
-GET http://localhost:3000/chats/b0bee855-57ad-4c98-9ee2-376a84c3b1f0 HTTP/1.1
+GET http://localhost:3000/chats/e2122bab-c201-4065-a929-ff47b819acc0 HTTP/1.1
 Authorization: 1
 
 ### 
@@ -197,5 +197,8 @@ Authorization: 1
 content-type: application/json
 ###
 
-GET http://localhost:3000/session/getuser/70fe6517-1bf4-4a92-bebb-7958586c4226 HTTP/1.1
+GET http://localhost:3000/session/getuser/e2122bab-c201-4065-a929-ff47b819acc0 HTTP/1.1
+Authorization: 1
+###
+GET http://localhost:3000/users/search?name=Frinco HTTP/1.1
 Authorization: 1

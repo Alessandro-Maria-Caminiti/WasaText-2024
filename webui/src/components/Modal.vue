@@ -71,13 +71,14 @@ export default {
     },
     
     // Funzione utilizzara per selezionare l'utente con cui aprire una conversazione
-    async selectUser(userToSend, username, photo) {
-      
-      localStorage.userID = userToSend;
+    async selectUser(userId) {
+     let respose = await this.$axios.get(`/session/getuser/${userId}`, { headers: { 'Authorization': `${sessionStorage.token}` } });
+      console.log(respose.data)
+      localStorage.userID = userId;
       console.log(localStorage.userID)
-      localStorage.username = username;
+      localStorage.username = respose.data.user.username;
       console.log(localStorage.username)
-      localStorage.photo = photo;
+      localStorage.photo = respose.data.user.photo;
       console.log(localStorage.photo)
       this.$router.push('/chats');
       this.closeModal();
@@ -118,7 +119,7 @@ export default {
               <!-- Risultato della ricerca -->
               <div class="search-results">
                 <div v-for="user in filteredUsers" :key="user.userId"
-                  @click="selectUser(user.UserId, user.username, user.Photo)">
+                  @click="selectUser(user.UserId)">
                     <div class="user">
                       <p v-if="user.username != username" >{{ user.username }}</p>
                     </div>

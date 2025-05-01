@@ -36,7 +36,7 @@ type Conversation struct {
 		GroupUsers   []models.User               `json:"groupUsers"`
 		Message      structs.Message      `json:"message"`
 		SenderUser   models.User                 `json:"senderUser"`
-		User_to_send models.User ``
+		User_to_send models.User 		`json:"usertosend"`
 	}
 
 // ConversationsResponse represents the response structure for chats	

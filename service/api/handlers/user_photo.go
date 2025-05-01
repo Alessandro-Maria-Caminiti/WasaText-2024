@@ -94,7 +94,7 @@ func SetMyPhotoHandler(database database.AppDatabase) http.HandlerFunc {
 		photoURL := fmt.Sprintf("/uploads/users/%s/profile%s", userID, ext)
 
 		// Update database with the new image path
-		err = database.UpdateUserProfileImage(userID, photoURL)
+		err = database.UpdateUserProfileImage(userID, base64Str)
 		if err != nil {
 			log.Printf(err.Error())
 			os.Remove(filePath) // Delete file if DB update fails
@@ -105,7 +105,6 @@ func SetMyPhotoHandler(database database.AppDatabase) http.HandlerFunc {
 		response.Status = "user Photo Updated Successfully"
 		response.PhotoURL= photoURL
 		response.Photo = base64Str
-		log.Printf(response.Photo)
 		// Send JSON response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

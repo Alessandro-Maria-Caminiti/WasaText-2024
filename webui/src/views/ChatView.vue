@@ -6,7 +6,7 @@ L'utente loggato può:
 - inviare messaggi testuali o con foto
 - eliminare messaggi
 - inoltrare messaggi
-- lasciare commenti ai messaggi e eliminarli
+- lasciare commenti ai messaggi e eliminarli 
 - visualizzare i commenti ai messaggi
 - visualizzare i messaggi della conversazione
 
@@ -65,7 +65,10 @@ export default {
     }
   },
   emits: ['login-success'],
-  methods: {
+  methods: 
+  
+  
+  {
     // Funzione utilizzata per controllare se il file inserito dall'utente è del formato corretto
     async handleFileChange(event) {
       this.errorMsg = "";
@@ -80,6 +83,9 @@ export default {
       }
       this.photo = file;  // Assegna il file inserito dall'utente alla variabile photo
     },
+
+
+
     // Funzione che prende i messaggi della conversazione
     async getConversation() {
   this.errormsg = null;
@@ -95,7 +101,7 @@ export default {
       headers: { 'Authorization': sessionStorage.token } 
     });
     console.log(response.data)
-    
+    console.log(localStorage.userID)
     // Gestisci il caso di conversazione vuota
     if (!response.data || response.data.length === 0) {
       console.log('Nessun messaggio nella conversazione');
@@ -111,6 +117,11 @@ export default {
     console.error('Errore nel recupero messaggi:', e);
   }
 },
+
+
+
+
+
     // Funzione che controlla se la convId è stata presa correttamente dai parametri
     async check() {
   this.errormsg = null;
@@ -131,7 +142,10 @@ try {
   }
 },
 
-createConversation() {
+
+
+
+async createConversation() {
  this.errormsg = null;
 this.$axios.put(`/chats/${sessionStorage.userID}/CreatePrivateConversation/${this.userIdToSend}`, {
 headers: { 'Authorization': sessionStorage.token }
@@ -144,6 +158,9 @@ window.location.reload();
 this.errormsg = e.toString();
  })},
 
+
+
+
 // Funzione che elimina un messaggio
 async deleteMessage(msgId) {
 this.errormsg = null;
@@ -155,6 +172,10 @@ this.$axios.delete(`/chats/${sessionStorage.userID}/${this.convId}/delete_messag
 this.errormsg = e.toString();
  });
  },
+
+
+
+
     async sendMessage() {
   this.errormsg = null;
   console.log("Invio messaggio con text:", this.text, "photo:", this.photo);
@@ -196,6 +217,11 @@ this.errormsg = e.toString();
       // Reindirizza alla pagina delle informazioni del gruppo
       this.$router.push(`/chats/${sessionStorage.userID}/${this.convId}/GetGroup`);
     },
+
+
+
+
+
     // Funzione che rimuove il commento dell'utente loggato
     async uncommentMessage(cmtId) {
       this.errormsg = null;
@@ -249,7 +275,7 @@ beforeUnmount() {
         <img :src="`data:image/jpg;base64,${proPic64}`">
       </div>
       <!-- Controlla se la conversazione è con un gruppo o con un utente -->
-      <div v-if="isGroup">
+      <div v-if="isGroup !== null">
         <!-- Se è un gruppo mostra il nome del gruppo -->
         <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.userToSend }}</h1>
       </div>
