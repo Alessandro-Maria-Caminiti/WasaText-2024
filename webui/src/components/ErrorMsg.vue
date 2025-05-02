@@ -1,5 +1,5 @@
 <template>
-  <div v-if="message" class="error-box">
+  <div v-if="message" class="error-msg" role="alert">
     <p>{{ message }}</p>
   </div>
 </template>
@@ -16,13 +16,15 @@ export default {
 </script>
 
 <style scoped>
-.error-box {
-  background-color: #ffdddd;
-  color: #d8000c;
-  padding: 10px;
-  border: 1px solid #d8000c;
-  border-radius: 5px;
-  margin: 10px 0;
+.error-msg {
+  background-color: #ffe6e6;
+  color: #b00020;
+  padding: 12px 16px;
+  border: 1px solid #b00020;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-weight: 500;
   text-align: center;
+  transition: all 0.3s ease;
 }
 </style>
