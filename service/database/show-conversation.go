@@ -10,27 +10,27 @@ func (db *appdbimpl) ShowConversation(username, conversationPartnerName string) 
 	var conversation []ConversationDetail
 
 	rows, err := db.c.Query(`
-    SELECT 
-        m.id, 
-        m.content,
-		m.sender,
-        m.is_photo, 
-		m.is_forwarded, 
-        m.created_at,
-        (SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND received = FALSE) = 0 AS fully_received,
-        (SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND read = FALSE) = 0 AS fully_read
-    FROM messages m
-    WHERE m.conversation_id IN (
-        SELECT id
-        FROM conversations
-        WHERE 
-            (user1 = ? AND user2 = ?) 
-            OR (user1 = ? AND user2 = ?) 
-            OR groupname = ?
-    )
-    ORDER BY m.created_at DESC`,
-		username, conversationPartnerName, conversationPartnerName, username, conversationPartnerName)
-
+		SELECT 
+			m.id, 
+			m.content,
+			m.sender,
+			m.is_photo, 
+			m.is_forwarded, 
+			m.created_at,
+			(SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND received = FALSE) = 0 AS fully_received,
+			(SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND read = FALSE) = 0 AS fully_read
+		FROM messages m
+		WHERE m.conversation_id IN (
+			SELECT id
+			FROM conversations
+			WHERE 
+				(user1 = ? AND user2 = ?) 
+				OR (user1 = ? AND user2 = ?) 
+				OR groupname = ?
+		)
+		ORDER BY m.created_at DESC`,
+		username, conversationPartnerName, conversationPartnerName, username, conversationPartnerName,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("error querying messages for conversation '%s': %w", conversationPartnerName, err)
 	}
@@ -44,7 +44,7 @@ func (db *appdbimpl) ShowConversation(username, conversationPartnerName string) 
 			return nil, fmt.Errorf("error scanning message row: %w", err)
 		}
 
-		// 2. Retrieve reactions for the current message
+		// Retrieve reactions for the current message
 		reactions, err := db.getReactionsForMessage(msg.MessageID)
 		if err != nil {
 			return nil, fmt.Errorf("error retrieving reactions for message '%d': %w", msg.MessageID, err)
@@ -69,9 +69,10 @@ func (db *appdbimpl) getReactionsForMessage(messageID int) ([]Reaction, error) {
 
 	// Query to retrieve both the reactor's username and content of the reaction
 	rows, err := db.c.Query(`
-        SELECT reactor_username, content
-        FROM comments
-        WHERE message_id = ?`, messageID)
+		SELECT reactor_username, content
+		FROM comments
+		WHERE message_id = ?`, messageID,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("error querying reactions for message '%d': %w", messageID, err)
 	}

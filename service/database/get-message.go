@@ -24,17 +24,26 @@ func (db *appdbimpl) GetMessage(messageID *int) (*ConversationDetail, error) {
 
 	// If a specific message ID is provided, retrieve that message
 	err = db.c.QueryRow(`
-    SELECT 
-        m.id, 
-        m.content,
-        m.sender, 
-        m.is_photo, 
-        m.is_forwarded, 
-        m.created_at, 
-        (SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND received = FALSE) = 0 AS fully_received,
-        (SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND read = FALSE) = 0 AS fully_read
-    FROM messages m
-    WHERE m.id = ?`, *messageID).Scan(&msg.MessageID, &msg.Content, &msg.Sender, &msg.IsPhoto, &msg.IsForwarded, &msg.Timestamp, &msg.FullyReceived, &msg.FullyRead)
+		SELECT 
+			m.id, 
+			m.content,
+			m.sender, 
+			m.is_photo, 
+			m.is_forwarded, 
+			m.created_at, 
+			(SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND received = FALSE) = 0 AS fully_received,
+			(SELECT COUNT(*) FROM message_status WHERE message_id = m.id AND read = FALSE) = 0 AS fully_read
+		FROM messages m
+		WHERE m.id = ?`, *messageID).Scan(
+		&msg.MessageID,
+		&msg.Content,
+		&msg.Sender,
+		&msg.IsPhoto,
+		&msg.IsForwarded,
+		&msg.Timestamp,
+		&msg.FullyReceived,
+		&msg.FullyRead,
+	)
 
 	// Handle any errors during the database query
 	if err != nil {

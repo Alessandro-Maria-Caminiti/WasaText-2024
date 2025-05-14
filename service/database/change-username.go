@@ -19,7 +19,7 @@ func (db *appdbimpl) ChangeUsername(oldUsername, newUsername string) error {
 		if err != nil {
 			rollbackErr := tx.Rollback() // Rollback if an error occurs
 			if rollbackErr != nil {
-				// Rollbackerror + Original Error
+				// Rollback error + Original Error
 				err = fmt.Errorf("failed to rollback transaction: %w, original error: %w", rollbackErr, err)
 			}
 		}

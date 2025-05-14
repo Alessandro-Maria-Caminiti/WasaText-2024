@@ -26,12 +26,12 @@ func (db *appdbimpl) LoadUserConversations(username string) ([]ConversationPrevi
 		CASE
 			WHEN m.is_photo THEN 'Photo'
 			WHEN m.content IS NULL THEN 'No messages yet'
-        	ELSE m.content
+			ELSE m.content
 		END AS last_message,
 		m.created_at AS last_message_time,
 		CASE 
-    		WHEN c.groupname IS NOT NULL THEN true
-    		ELSE false
+			WHEN c.groupname IS NOT NULL THEN true
+			ELSE false
 		END AS is_group
 	FROM conversations c
 	LEFT JOIN messages m ON m.id = (

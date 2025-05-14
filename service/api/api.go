@@ -38,10 +38,12 @@ package api
 
 import (
 	"errors"
+	"net/http"
+
 	"WasaText/service/database"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 // Config is used to provide dependencies and configuration to the New function.

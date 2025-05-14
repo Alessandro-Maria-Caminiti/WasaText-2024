@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -46,7 +47,7 @@ func (db *appdbimpl) SendMessage(msg NewMessage) (int, error) {
 		// 3. Check if a conversation for the group already exists
 		err = tx.QueryRow(`SELECT id FROM conversations WHERE groupname = ?`, msg.ToUser).Scan(&conversationID)
 
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// No existing conversation, create a new one
 			err = tx.QueryRow(`
 				INSERT INTO conversations (groupname) 
@@ -65,7 +66,7 @@ func (db *appdbimpl) SendMessage(msg NewMessage) (int, error) {
 			WHERE (user1 = ? AND user2 = ?) OR (user2 = ? AND user1 = ?)`,
 			msg.FromUser, msg.ToUser, msg.FromUser, msg.ToUser).Scan(&conversationID)
 
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = tx.QueryRow(`
 				INSERT INTO conversations (user1, user2) VALUES (?, ?) RETURNING id`,
 				msg.FromUser, msg.ToUser).Scan(&conversationID)

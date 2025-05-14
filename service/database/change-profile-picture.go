@@ -5,7 +5,7 @@ import (
 )
 
 // ChangeProfilePicture updates the profile picture URL for a given user.
-// The new profile picture URL is provided as `newProfilePhotoURL`.
+// The new profile picture URL is provided as newProfilePhotoURL.
 // This function assumes the user has already been checked at the API level for existence.
 func (db *appdbimpl) ChangeProfilePicture(username, newProfilePhotoURL string) error {
 	// Update the user's profile picture URL in the database

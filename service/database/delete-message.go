@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -14,7 +15,7 @@ import (
 //
 // Returns:
 // - An error if the deletion fails or if the user does not have permission.
-func (db *appdbimpl) DeleteMessage(currentUser string, messageID int) error {
+func (db *appdbimpl) DeleteMessage(currentUser string, messageID int) (err error) {
 	tx, err := db.c.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
@@ -34,13 +35,13 @@ func (db *appdbimpl) DeleteMessage(currentUser string, messageID int) error {
 
 	// Step 1: Retrieve the message and check if the user has permission to delete it
 	err = tx.QueryRow(`
-        SELECT m.id, sender
-        FROM messages m
-        WHERE m.id = ?`,
+		SELECT m.id, sender
+		FROM messages m
+		WHERE m.id = ?`,
 		messageID).Scan(&messageID, &sender)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("message not found or no permissions to delete")
 		}
 		return fmt.Errorf("failed to find message: %w", err)

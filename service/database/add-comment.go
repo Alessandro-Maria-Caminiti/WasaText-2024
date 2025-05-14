@@ -16,10 +16,12 @@ import (
 // - error: An error if the database insertion fails.
 func (db *appdbimpl) AddComment(messageID int, currentUser string, content string) error {
 	_, err := db.c.Exec(`
-        INSERT INTO comments (reactor_username, message_id, content)
-        VALUES (?, ?, ?)
-        ON CONFLICT(reactor_username, message_id) 
-        DO UPDATE SET content = ?`, currentUser, messageID, content, content)
+		INSERT INTO comments (reactor_username, message_id, content)
+		VALUES (?, ?, ?)
+		ON CONFLICT(reactor_username, message_id) 
+		DO UPDATE SET content = ?`,
+		currentUser, messageID, content, content,
+	)
 
 	if err != nil {
 		log.Printf("failed to insert comment: %v", err)

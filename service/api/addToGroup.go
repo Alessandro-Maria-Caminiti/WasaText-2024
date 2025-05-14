@@ -23,7 +23,6 @@ type AddToGroupResponse struct {
 
 // addToGroup handles adding users to a group (creates group if not existing)
 func (rt *_router) addToGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 	// Set response content type
 	w.Header().Set("Content-Type", "application/json")
 

@@ -38,11 +38,10 @@ import (
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-
-	//Securityralated Functions
+	// Security-related Functions
 	GetUsernameByToken(token string) (string, error)
 
-	// Userrelated Functions
+	// User-related Functions
 	GetUser(username string) (*User, error)
 	CreateUser(username string, profilePhotoURL string, authToken int) error
 	SearchUser(partialUsername string) ([]User, error)
@@ -147,11 +146,9 @@ func New(db *sql.DB) (AppDatabase, error) {
 	}
 
 	// Check if table exists. If not, the database will be created
-
 	for tableName, createStmt := range tables {
 		_, err := db.Exec(createStmt)
 		if err != nil {
-			fmt.Printf("SQL Error: Failed to create table %s. Statement: %s, Error: %v\n", tableName, createStmt, err)
 			return nil, fmt.Errorf("error creating table %s: %w", tableName, err)
 		}
 	}
@@ -168,7 +165,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 				return nil, fmt.Errorf("error creating database structure: %w", err)
 			}
 		}
-
 	*/
 
 	return &appdbimpl{
