@@ -24,7 +24,11 @@ func (db *appdbimpl) SearchUser(partialUsername string) ([]User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Iterate through all the rows returned from the query
 	var users []User

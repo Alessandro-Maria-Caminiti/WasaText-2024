@@ -34,7 +34,11 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 		http.Error(w, `{"error": "Unable to retrieve file from form."}`, http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			http.Error(w, `{"error": "Failed to close the uploaded file."}`, http.StatusInternalServerError)
+		}
+	}()
 
 	// Check if the file extension is valid
 	allowedExtensions := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true}
@@ -74,7 +78,11 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 		http.Error(w, `{"error": "Failed to save the file on the server."}`, http.StatusInternalServerError)
 		return
 	}
-	defer dst.Close()
+	defer func() {
+		if cerr := dst.Close(); cerr != nil {
+			http.Error(w, `{"error": "Failed to close the file on the server."}`, http.StatusInternalServerError)
+		}
+	}()
 
 	// Copy the uploaded file to the server
 	_, err = io.Copy(dst, file)

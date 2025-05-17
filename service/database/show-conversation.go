@@ -34,7 +34,11 @@ func (db *appdbimpl) ShowConversation(username, conversationPartnerName string) 
 	if err != nil {
 		return nil, fmt.Errorf("error querying messages for conversation '%s': %w", conversationPartnerName, err)
 	}
-	defer rows.Close()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rows: %w", cerr)
+		}
+	}()
 
 	// Populate the conversation details
 	for rows.Next() {
@@ -76,7 +80,11 @@ func (db *appdbimpl) getReactionsForMessage(messageID int) ([]Reaction, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error querying reactions for message '%d': %w", messageID, err)
 	}
-	defer rows.Close()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			err = fmt.Errorf("error closing reaction rows: %w", cerr)
+		}
+	}()
 
 	// Collect all reactions from the result set
 	for rows.Next() {

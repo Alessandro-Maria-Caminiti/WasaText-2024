@@ -53,7 +53,11 @@ func (db *appdbimpl) LoadUserConversations(username string) ([]ConversationPrevi
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Prepare the list of conversation previews
 	var previews []ConversationPreview
