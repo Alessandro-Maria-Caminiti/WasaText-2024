@@ -4,7 +4,7 @@
       :src="user.profile_photo_url || defaultAvatar" 
       alt="Profile Picture" 
       class="profile-picture" 
-    />
+    >
     <span class="username">{{ user.username }}</span>
   </div>
 </template>

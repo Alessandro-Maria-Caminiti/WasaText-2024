@@ -3,7 +3,7 @@
     <!-- Header with Title and Optional Group Settings -->
     <header class="chat-header">
       <h1 class="chat-title">{{ $route.query.username }}</h1>
-      <button v-if="$route.query.isGroup" @click="goToGroupSettings" class="btn btn-group-settings">
+      <button v-if="$route.query.isGroup" class="btn btn-group-settings" @click="goToGroupSettings">
         Group Settings
       </button>
     </header>
@@ -56,6 +56,20 @@ export default {
       messages: [],
       updateInterval: null,
     };
+  },
+  mounted() {
+    this.fetchMessages();
+
+    this.updateInterval = setInterval(() => {
+      this.fetchMessages();
+    }, 10000);
+  },
+
+  beforeUnmount() {
+    // Delete the Interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   },
   methods: {
 
@@ -159,21 +173,6 @@ export default {
       }
     },
 
-  },
-
-  mounted() {
-    this.fetchMessages();
-
-    this.updateInterval = setInterval(() => {
-      this.fetchMessages();
-    }, 10000);
-  },
-
-  beforeUnmount() {
-    // Delete the Interval
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
   },
 };
 </script>

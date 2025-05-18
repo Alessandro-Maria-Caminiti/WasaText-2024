@@ -4,7 +4,7 @@
       :src="chat.photo_url?.String || defaultAvatar" 
       alt="Profile Picture" 
       class="profile-picture" 
-    />
+    >
 
     <div class="chat-details">
       <div class="chat-header">

@@ -1,12 +1,11 @@
 <template>
-  <div class="incoming-message">
-
+  <div 
+    class="incoming-message"
+  >
     <!-- Sender Username -->
     <span class="username" aria-label="Sender username">{{ username }}</span>
-
     <!-- Forwarded Label -->
     <div v-if="isForwarded" class="forwarded">Forwarded Message</div>
-
     <!-- Message Content -->
     <div class="message-content">
       <img
@@ -14,30 +13,26 @@
         :src="content"
         alt="Received Photo"
         class="message-photo"
-      />
+      >
       <span v-else class="content">{{ content }}</span>
     </div>
-
     <!-- Timestamp -->
     <div class="message-info">
       <span class="timestamp">{{ formatTime(timestamp) }}</span>
     </div>
-
     <!-- Reaction Button -->
-    <button @click="toggleReactionPopup" class="reaction-button" aria-label="React to message">+</button>
-
+    <button aria-label="React to message" class="reaction-button" @click="toggleReactionPopup">+</button>
     <!-- Reactions Display -->
-    <div class="reactions" v-if="reactions.length">
+    <div v-if="reactions.length" class="reactions">
       <div
-        class="reaction"
         v-for="(reaction, index) in reactions"
         :key="index"
+        class="reaction"
       >
         <span class="reactor">{{ reaction.reactor }}:</span>
-        <span class="emoji">{{ reaction.content }}</span>
+        <span class="emoji">{{ reaction.content }}</span>   
       </div>
     </div>
-
     <!-- Emoji Selection Popup -->
     <div v-if="isReacting" class="reaction-popup">
       <button @click="addReaction(':D')">:D</button>
@@ -45,13 +40,38 @@
       <button @click="addReaction(':|')">:|</button>
       <button @click="addReaction(':O')">:O</button>
     </div>
-
   </div>
 </template>
 
 <script>
 export default {
-  props: ["username", "content", "timestamp", "isPhoto", "isForwarded", "reactions"],
+  props: {
+    username: {
+      type: String,
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: [String, Number, Date],
+      required: true
+    },
+    isPhoto: {
+      type: Boolean,
+      required: true
+    },
+    isForwarded: {
+      type: Boolean,
+      required: true
+    },
+    reactions: {
+      type: Array,
+      required: true
+    }
+  },
+  emits: ["reaction-added"],
   data() {
     return {
       isReacting: false,  // Flag to toggle the emoji popup visibility

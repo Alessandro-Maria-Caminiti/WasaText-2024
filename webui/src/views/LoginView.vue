@@ -7,7 +7,7 @@
         class="login-input"
         type="text"
         placeholder="Enter your username"
-      />
+      >
       <button class="login-button" @click="login">Login</button>
       <p v-if="error" class="error-message">{{ error }}</p>
     </div>

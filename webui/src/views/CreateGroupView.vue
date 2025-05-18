@@ -5,13 +5,13 @@
 
       <div class="form-group">
         <label for="groupname">Group Name</label>
-        <input type="text" id="groupname" v-model="groupname" placeholder="Enter group name" />
+        <input id="groupname" v-model="groupname" type="text" placeholder="Enter group name">
       </div>
 
       <div class="form-group">
         <label for="members">Add Members</label>
         <div class="add-members">
-          <input type="text" id="members" v-model="newMember" placeholder="Enter a username" />
+          <input id="members" v-model="newMember" type="text" placeholder="Enter a username">
           <button class="btn" @click="addMember">Add</button>
         </div>
       </div>
@@ -19,7 +19,7 @@
       <div class="form-group">
         <label>Added Members</label>
         <div class="member-list">
-          <span class="member-tag" v-for="(member, index) in addedMembers" :key="index">{{ member }}</span>
+          <span v-for="(member, index) in addedMembers" :key="index" class="member-tag">{{ member }}</span>
         </div>
       </div>
 

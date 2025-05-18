@@ -5,7 +5,7 @@
 
     <!-- Photo or Text Message -->
     <div v-if="isPhoto">
-      <img :src="content" alt="Sent Photo" class="message-photo" />
+      <img :src="content" alt="Sent Photo" class="message-photo">
     </div>
     <span v-else class="content">{{ content }}</span>
 
@@ -19,7 +19,7 @@
     </div>
 
     <!-- Reaction Trigger Button -->
-    <button @click="toggleReactionPopup" class="reaction-button">+</button>
+    <button class="reaction-button" @click="toggleReactionPopup">+</button>
 
     <!-- Display Reactions -->
     <div class="reactions">
@@ -41,7 +41,46 @@
 
 <script>
 export default {
-  props: ["content", "timestamp", "isPhoto", "isForwarded", "reactions", "fullyReceived", "fullyRead", "username"],
+  props: {
+    content: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: [String, Number, Date],
+      required: true
+    },
+    isPhoto: {
+      type: Boolean,
+      required: true
+    },
+    isForwarded: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    reactions: {
+      type: Array,
+      required: false,
+      default: () => []
+    },
+    fullyReceived: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    fullyRead: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    username: {
+      type: String,
+      required: false,
+      default: ""
+    }
+  },
+  emits: ["reaction-added"],
   data() {
     return {
       isReacting: false,  // Flag to toggle the emoji popup visibility

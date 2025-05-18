@@ -3,11 +3,11 @@
     <!-- Image Upload -->
     <label class="file-upload">
       📷
-      <input type="file" @change="handleFileUpload" accept="image/*" hidden />
+      <input type="file" accept="image/*" hidden @change="handleFileUpload">
     </label>
 
     <!-- Send Image Button -->
-    <button @click="sendImage" class="send-btn">Send Image</button>
+    <button class="send-btn" @click="sendImage">Send Image</button>
 
     <!-- Message Input -->
     <input
@@ -15,15 +15,16 @@
       placeholder="Type a message..."
       class="text-input"
       @keyup.enter="sendMessage"
-    />
+    >
 
     <!-- Send Message Button -->
-    <button @click="sendMessage" :disabled="!message.trim()" class="send-btn">Send</button>
+    <button :disabled="!message.trim()" class="send-btn" @click="sendMessage">Send</button>
   </div>
 </template>
 
 <script>
 export default {
+  emits: ['send', 'send-image'],
   data() {
     return { message: '', imageFile: null };
   },

@@ -7,7 +7,7 @@
       placeholder="Search..."
       class="search-bar"
       @input="onSearch"
-    />
+    >
 
     <div class="user-list">
       <template v-if="filteredUsers.length">
@@ -31,17 +31,20 @@ export default {
   components: {
     UserCard,
   },
-  computed: {
-    filteredUsers() {
-      return this.users.filter(user => user.username !== sessionStorage.getItem("currentUser"));
-    }
-  },
   data() {
     return {
       searchQuery: "",
       users: [],
     };
   },
+  computed: {
+    filteredUsers() {
+      return this.users.filter(user => user.username !== sessionStorage.getItem("currentUser"));
+    }
+  },
+  mounted() {
+    this.fetchUsers();
+  },  
   methods: {
     async fetchUsers() {
       try {
@@ -53,9 +56,6 @@ export default {
         console.error("Error fetching users", error);
       }
     },
-  },
-  mounted() {
-    this.fetchUsers();
   },
 };
 </script>

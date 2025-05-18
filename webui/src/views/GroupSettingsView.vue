@@ -3,11 +3,11 @@
     <div class="settings-card">
       <h1 class="title">Group Settings</h1>
 
-      <img class="avatar" :src="groupPhotoURL" alt="Group Avatar" />
-      <input type="file" class="file-input" @change="handleFileUpload" accept="image/*" />
+      <img class="avatar" :src="groupPhotoURL" alt="Group Avatar">
+      <input type="file" class="file-input" accept="image/*" @change="handleFileUpload">
       <button class="btn primary" @click="uploadGroupPhoto">Upload Group Photo</button>
 
-      <input type="text" class="group-input" v-model="groupname" placeholder="Group name" />
+      <input v-model="groupname" type="text" class="group-input" placeholder="Group name">
 
       <div class="actions">
         <button class="btn secondary" @click="saveGroupName">Save</button>
