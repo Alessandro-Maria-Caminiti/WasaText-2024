@@ -1,17 +1,16 @@
 <template>
   <div class="message-input">
-
-    <input type="file" @change="handleFileUpload" accept="image/*" />
+    <input type="file" accept="image/*" @change="handleFileUpload">
     <button @click="sendImage">Send Image</button>
 
-    <input v-model="message" placeholder="Type a message..." />
+    <input v-model="message" placeholder="Type a message...">
     <button @click="sendMessage">Send</button>
-
   </div>
 </template>
 
 <script>
 export default {
+  emits: ["send", "send-image"],
   data() {
     return { message: '', imageFile: null };
   },

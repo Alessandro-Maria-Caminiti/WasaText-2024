@@ -4,7 +4,7 @@
       :src="chat.photo_url.String || `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&size=40`" 
       alt="Profile Picture" 
       class="profile-picture" 
-    />
+    >
     <div class="chat-info">
       <strong class="convo-name">{{ chat.name }}</strong>
       <p class="last-message">{{ chat.last_message.String }}</p>

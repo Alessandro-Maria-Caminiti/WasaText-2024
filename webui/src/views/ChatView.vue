@@ -1,11 +1,11 @@
 <template>
   <div class="chat-view">
     <!-- Partner Username as Title -->
-    <h1 class="chat-title">{{this.$route.query.username}}</h1>
+    <h1 class="chat-title">{{ $route.query.username }}</h1>
 
     <!-- Group Settings Button (nur wenn es eine Gruppe ist) -->
-    <div v-if="this.$route.query.isGroup">
-      <button @click="goToGroupSettings" class="group-settings-button">
+    <div v-if="$route.query.isGroup">
+      <button class="group-settings-button" @click="goToGroupSettings">
         Group Settings
       </button>
     </div>
@@ -13,7 +13,7 @@
     <!-- Show the messages List -->
     <div v-for="msg in messages" :key="msg.message_id">
       <IncomingMessage 
-        v-if="msg.sender === this.$route.query.username" 
+        v-if="msg.sender === $route.query.username" 
         :username="msg.sender"
         :content="msg.content"
         :timestamp="msg.timestamp"
@@ -37,7 +37,6 @@
 
     <!-- New Message Input -->
     <MessageInput @send="handleSend" @send-image="handleImageUpload" />
-
   </div>
 </template>
 
@@ -54,6 +53,20 @@ export default {
       messages: [],
       updateInterval: null,
     };
+  },
+  mounted() {
+    this.fetchMessages();
+
+    this.updateInterval = setInterval(() => {
+      this.fetchMessages();
+    }, 10000);
+  },
+
+  beforeUnmount() {
+    // Delete the Interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   },
   methods: {
 
@@ -80,7 +93,6 @@ export default {
         const partnerUsername = this.$route.query.username;
         let isPhoto = false;
 
-        // Überprüfen, ob der Inhalt eine URL zu einem Bild ist
         const urlMatch = content.match(/https?:\/\/.*\.(jpg|jpeg|png|gif|bmp|svg)/i);
         if (urlMatch) {
           isPhoto = true;
@@ -111,14 +123,13 @@ export default {
         const formData = new FormData();
         formData.append("image", imageFile);
 
-        // Upload an das Backend
+        // Upload Backend
         const uploadResponse = await axios.post("/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
         const imageUrl = uploadResponse.data.imageUrl;
 
-        // Bild als Nachricht senden
         this.handleSend(imageUrl);
       } catch (error) {
         console.error("Error uploading image:", error);
@@ -135,12 +146,10 @@ export default {
         return;
       }
 
-      // Sicherstellen, dass `reactions` existiert
       if (!message.reactions) {
         message.reactions = [];
       }
 
-      // Reaktion hinzufügen
       message.reactions.push(reaction);
 
       // Send reaction to server
@@ -157,21 +166,6 @@ export default {
       }
     },
 
-  },
-
-  mounted() {
-    this.fetchMessages();
-
-    this.updateInterval = setInterval(() => {
-      this.fetchMessages();
-    }, 10000);
-  },
-
-  beforeUnmount() {
-    // Delete the Interval
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
   },
 };
 </script>

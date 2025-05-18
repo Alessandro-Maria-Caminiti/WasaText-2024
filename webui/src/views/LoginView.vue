@@ -2,7 +2,7 @@
   <div class="login-container">
     <h1>Login</h1>
     <!-- Input field for the username -->
-    <input v-model="username" placeholder="Enter your username" />
+    <input v-model="username" placeholder="Enter your username">
     <!-- Button to trigger the login function -->
     <button @click="login">Login</button>
     <!-- Display an error message if there is an error -->

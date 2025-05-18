@@ -1,47 +1,73 @@
 <template>
   <div class="outgoing-message">
-
     <!-- Forwarded -->
     <div v-if="isForwarded" class="forwarded">Forwarded Message</div>
-
     <!-- Photo display -->
     <div v-if="isPhoto">
-      <img :src="content" alt="Sent Photo" class="message-photo" />
+      <img :src="content" alt="Sent Photo" class="message-photo">
     </div>
     <span v-else class="content">{{ content }}</span>
-
     <!-- Message Status and Timestamp -->
     <div class="message-status">
       <span class="timestamp">{{ formatTime(timestamp) }}</span>
       <span v-if="fullyRead" class="status">✔✔</span>
       <span v-else-if="fullyReceived" class="status">✔</span>
     </div>
-
     <!-- Reaction Button -->
-    <button @click="toggleReactionPopup" class="reaction-button">+</button>
-
+    <button class="reaction-button" @click="toggleReactionPopup">+</button>
     <!-- Reactions Display -->
     <div class="reactions">
       <div v-for="(reaction, index) in reactions" :key="index">
         <span>{{ reaction.reactor }}: </span><span>{{ reaction.content }}</span>
       </div>
     </div>
-
     <!-- Emoji Selection Popup -->
     <div v-if="isReacting" class="reaction-popup">
       <button @click="addReaction(':D')">:D</button>
       <button @click="addReaction('D:')">D:</button>
       <button @click="addReaction(':|')">:|</button>
     </div>
-
-
   </div>
 </template>
 
 <script>
 export default {
-  props: ["content", "timestamp", "isPhoto", "isForwarded", "reactions", "fullyReceived", "fullyRead", "username"],
-  data() {
+  props: {
+    content: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: [String, Number, Date],
+      required: true
+    },
+    isPhoto: {
+      type: Boolean,
+      default: false
+    },
+    isForwarded: {
+      type: Boolean,
+      default: false
+    },
+    reactions: {
+      type: Array,
+      default: () => []
+    },
+    fullyReceived: {
+      type: Boolean,
+      default: false
+    },
+    fullyRead: {
+      type: Boolean,
+      default: false
+    },
+    username: {
+      type: String,
+      required: true
+    }
+  },
+  emits: ["reaction-added"],
+  data(){
     return {
       isReacting: false,  // Flag to toggle the emoji popup visibility
     };

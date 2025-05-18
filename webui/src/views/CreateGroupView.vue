@@ -2,16 +2,16 @@
   <div class="container">
     <div class="input-group">
       <label for="groupname">Groupname:</label>
-      <input type="text" id="groupname" v-model="groupname" placeholder="Enter group name">
+      <input id="groupname" v-model="groupname" type="text" placeholder="Enter group name">
       <label for="members">Add Members:</label>
 
       <div class="add-members">
-        <input type="text" id="members" v-model="newMember" placeholder="Enter an username">
+        <input id="members" v-model="newMember" type="text" placeholder="Enter an username">
         <button @click="addMember"> Add </button>
       </div>
 
       <label for="memberlist">Added Members:</label>
-      <p id="memberlist" v-for="(member, index) in addedMembers" :key="index">
+      <p v-for="(member, index) in addedMembers" id="memberlist" :key="index">
         {{ member }}
       </p>
 

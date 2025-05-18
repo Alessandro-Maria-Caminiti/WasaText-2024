@@ -2,11 +2,10 @@
   <div class="group-settings">
     <h1 class="group-settings-title">Group Settings</h1>
     <div class="group-settings-card">
-      <img class="group-photo" :src="groupPhotoURL" alt="Group Avatar" />
-      <input type="file" @change="handleFileUpload" accept="image/*" />
+      <img class="group-photo" :src="groupPhotoURL" alt="Group Avatar">
+      <input type="file" accept="image/*" @change="handleFileUpload">
       <button class="upload-button" @click="uploadGroupPhoto">Upload Group Photo</button>
-
-      <input type="text" class="group-name" v-model="groupname" />
+      <input v-model="groupname" class="group-name" type="text">
       <div class="button-group">
         <button class="save-button" @click="saveGroupName">Save</button>
         <button class="add-user-button" @click="addUserToGroup">Add User</button>

@@ -3,13 +3,13 @@
     <h1 class="profile-title">Profile</h1>
     <div class="profile-card">
       <!-- Profilbild -->
-      <img class="profile-avatar" :src="profilePhotoURL" alt="User Avatar" />
+      <img class="profile-avatar" :src="profilePhotoURL" alt="User Avatar">
 
       <!-- Datei-Upload für das Profilbild -->
-      <input type="file" @change="handleFileUpload" accept="image/*" />
+      <input type="file" accept="image/*" @change="handleFileUpload">
       <button class="upload-button" @click="uploadProfilePicture">Upload Picture</button>
 
-      <input type="text" class="profile-name" v-model="username" placeholder="Enter username" />
+      <input v-model="username" type="text" class="profile-name" placeholder="Enter username">
       <ErrorMsg v-if="errorMsg" :message="errorMsg" />
       <div class="button-group">
         <button class="save-button" @click="saveProfile">Save</button>
@@ -32,6 +32,12 @@ export default {
       imageFile: null
     };
   },
+
+  mounted() {
+
+this.fetchUser();
+
+},
   methods: {
     async fetchUser() {
       try {
@@ -114,12 +120,6 @@ export default {
         alert('Failed to update profile picture.');
       }
     },
-
-  },
-
-  mounted() {
-
-    this.fetchUser();
 
   },
 };

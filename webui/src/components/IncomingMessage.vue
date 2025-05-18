@@ -1,47 +1,65 @@
 <template>
   <div class="incoming-message">
-
     <!-- Sender Username -->
     <span class="username">{{ username }}</span>
-
     <!-- Forwarded -->
     <div v-if="isForwarded" class="forwarded">Forwarded Message</div>
-
     <!-- Photo display -->
     <div v-if="isPhoto">
-      <img :src="content" alt="Received Photo" class="message-photo" />
+      <img :src="content" alt="Received Photo" class="message-photo">
     </div>
     <span v-else class="content">{{ content }}</span>
-
     <!-- Timestamp -->
     <div class="message-info">
       <span class="timestamp">{{ formatTime(timestamp) }}</span>
     </div>
-
     <!-- Reaction Button -->
-    <button @click="toggleReactionPopup" class="reaction-button">+</button>
-
+    <button class="reaction-button" @click="toggleReactionPopup">+</button>
     <!-- Reactions Display -->
     <div class="reactions">
       <div v-for="(reaction, index) in reactions" :key="index">
         <span>{{ reaction.reactor }}: </span><span>{{ reaction.content }}</span>
       </div>
     </div>
-
     <!-- Emoji Selection Popup -->
     <div v-if="isReacting" class="reaction-popup">
       <button @click="addReaction(':D')">:D</button>
       <button @click="addReaction('D:')">D:</button>
-      <button @click="addReaction(':|')">:|</button>
+      <button @click="addReaction(':|')">:|</button>    
     </div>
-
-
   </div>
 </template>
 
 <script>
 export default {
-  props: ["username", "content", "timestamp", "isPhoto", "isForwarded", "reactions"],
+  props: {
+  username: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: [String, Number, Date], // Depending on how it's passed
+    required: true
+  },
+  isPhoto: {
+    type: Boolean,
+    default: false
+  },
+  isForwarded: {
+    type: Boolean,
+    default: false
+  },
+  reactions: {
+    type: Array,
+    default: () => []
+  }
+},
+
+  emits: ["reaction-added"],
   data() {
     return {
       isReacting: false,  // Flag to toggle the emoji popup visibility

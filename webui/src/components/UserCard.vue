@@ -7,7 +7,7 @@
       :src="user.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&size=40`" 
       alt="Profile Picture" 
       class="profile-picture" 
-    />
+    >
     <span class="username">{{ user.username }}</span>
   </div>
 </template>

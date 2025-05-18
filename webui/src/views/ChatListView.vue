@@ -35,6 +35,20 @@ export default {
       updateInterval: null,
     };
   },
+  mounted() {
+    this.fetchConversations();
+
+    this.updateInterval = setInterval(() => {
+      this.fetchConversations();
+    }, 5000);
+  },
+
+  beforeUnmount() {
+    // Delete the Interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+  },
   methods: {
     async fetchConversations() {
       try {
@@ -68,20 +82,6 @@ export default {
     closeCreatedDialog() {
       this.showCreatedDialog = false;
     },
-  },
-  mounted() {
-    this.fetchConversations();
-
-    this.updateInterval = setInterval(() => {
-      this.fetchConversations();
-    }, 5000);
-  },
-
-  beforeUnmount() {
-    // Delete the Interval
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
   },
 };
 </script>
