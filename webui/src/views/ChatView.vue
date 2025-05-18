@@ -1,47 +1,45 @@
 <template>
   <div class="chat-view">
-    <!-- Header with Title and Optional Group Settings -->
-    <header class="chat-header">
-      <h1 class="chat-title">{{ $route.query.username }}</h1>
-      <button v-if="$route.query.isGroup" class="btn btn-group-settings" @click="goToGroupSettings">
+    <!-- Partner Username as Title -->
+    <h1 class="chat-title">{{this.$route.query.username}}</h1>
+
+    <!-- Group Settings Button (nur wenn es eine Gruppe ist) -->
+    <div v-if="this.$route.query.isGroup">
+      <button @click="goToGroupSettings" class="group-settings-button">
         Group Settings
       </button>
-    </header>
+    </div>
 
-    <!-- Messages -->
-    <main class="messages-container">
-      <div v-for="msg in messages" :key="msg.message_id" class="message-wrapper">
-        <IncomingMessage 
-          v-if="msg.sender === $route.query.username" 
-          :username="msg.sender"
-          :content="msg.content"
-          :timestamp="msg.timestamp"
-          :is-photo="msg.is_photo"
-          :is-forwarded="msg.is_forwarded"
-          :reactions="msg.reactions"
-          @reaction-added="handleReaction(msg.message_id, $event)"
-        />
-        <OutgoingMessage 
-          v-else 
-          :content="msg.content" 
-          :timestamp="msg.timestamp"
-          :is-photo="msg.is_photo"
-          :is-forwarded="msg.is_forwarded"
-          :reactions="msg.reactions"
-          :fully-received="msg.fully_received"
-          :fully-read="msg.fully_read"
-          @reaction-added="handleReaction(msg.message_id, $event)"
-        />
-      </div>
-    </main>
+    <!-- Show the messages List -->
+    <div v-for="msg in messages" :key="msg.message_id">
+      <IncomingMessage 
+        v-if="msg.sender === this.$route.query.username" 
+        :username="msg.sender"
+        :content="msg.content"
+        :timestamp="msg.timestamp"
+        :is-photo="msg.is_photo"
+        :is-forwarded="msg.is_forwarded"
+        :reactions="msg.reactions"
+        @reaction-added="handleReaction(msg.message_id, $event)"
+      />
+      <OutgoingMessage 
+        v-else 
+        :content="msg.content" 
+        :timestamp="msg.timestamp"
+        :is-photo="msg.is_photo"
+        :is-forwarded="msg.is_forwarded"
+        :reactions="msg.reactions"
+        :fully-received="msg.fully_received"
+        :fully-read="msg.fully_read"
+        @reaction-added="handleReaction(msg.message_id, $event)"
+      />
+    </div>
 
-    <!-- Message Input -->
-    <footer class="message-input-container">
-      <MessageInput @send="handleSend" @send-image="handleImageUpload" />
-    </footer>
+    <!-- New Message Input -->
+    <MessageInput @send="handleSend" @send-image="handleImageUpload" />
+
   </div>
 </template>
-
 
 <script>
 import IncomingMessage from '@/components/IncomingMessage.vue';
@@ -56,20 +54,6 @@ export default {
       messages: [],
       updateInterval: null,
     };
-  },
-  mounted() {
-    this.fetchMessages();
-
-    this.updateInterval = setInterval(() => {
-      this.fetchMessages();
-    }, 10000);
-  },
-
-  beforeUnmount() {
-    // Delete the Interval
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
   },
   methods: {
 
@@ -174,73 +158,61 @@ export default {
     },
 
   },
+
+  mounted() {
+    this.fetchMessages();
+
+    this.updateInterval = setInterval(() => {
+      this.fetchMessages();
+    }, 10000);
+  },
+
+  beforeUnmount() {
+    // Delete the Interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+  },
 };
 </script>
-
 <style scoped>
 .chat-view {
+  background: linear-gradient(135deg, #6a82fb 0%, #fc5c7d 100%);
+  padding: 32px 0 0 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #f3f4f6; /* Light gray background */
-  font-family: 'Inter', sans-serif;
-  color: #1f2937;
-}
-
-.chat-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .chat-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.btn {
+.group-settings-button {
+  position: absolute;
+  top: 32px;
+  right: 40px;
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  padding: 12px 22px;
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
+  border-radius: 24px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(67,233,123,0.15);
+  transition: background 0.2s, transform 0.15s;
 }
 
-.btn-group-settings {
-  background-color: #3b82f6; /* blue-500 */
-  color: white;
+.group-settings-button:hover {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 20px rgba(67,233,123,0.22);
 }
-
-.btn-group-settings:hover {
-  background-color: #2563eb; /* blue-600 */
-}
-
-.messages-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 16px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background-color: #e5e7eb; /* Light gray */
-}
-
-.message-wrapper {
-  display: flex;
-}
-
-.message-input-container {
-  padding: 12px 24px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-}
-
 </style>

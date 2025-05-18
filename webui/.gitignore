@@ -35,4 +35,3 @@ node_modules/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-eslint.config.mjs

@@ -1,18 +1,16 @@
 <template>
-  <div class="settings-wrapper">
-    <div class="settings-card">
-      <h1 class="title">Group Settings</h1>
+  <div class="group-settings">
+    <h1 class="group-settings-title">Group Settings</h1>
+    <div class="group-settings-card">
+      <img class="group-photo" :src="groupPhotoURL" alt="Group Avatar" />
+      <input type="file" @change="handleFileUpload" accept="image/*" />
+      <button class="upload-button" @click="uploadGroupPhoto">Upload Group Photo</button>
 
-      <img class="avatar" :src="groupPhotoURL" alt="Group Avatar">
-      <input type="file" class="file-input" accept="image/*" @change="handleFileUpload">
-      <button class="btn primary" @click="uploadGroupPhoto">Upload Group Photo</button>
-
-      <input v-model="groupname" type="text" class="group-input" placeholder="Group name">
-
-      <div class="actions">
-        <button class="btn secondary" @click="saveGroupName">Save</button>
-        <button class="btn info" @click="addUserToGroup">Add User</button>
-        <button class="btn danger" @click="leaveGroup">Leave Group</button>
+      <input type="text" class="group-name" v-model="groupname" />
+      <div class="button-group">
+        <button class="save-button" @click="saveGroupName">Save</button>
+        <button class="add-user-button" @click="addUserToGroup">Add User</button>
+        <button class="leave-button" @click="leaveGroup">Leave Group</button>
       </div>
     </div>
   </div>
@@ -106,110 +104,128 @@ export default {
 </script>
 
 <style scoped>
-.settings-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f3f4f6;
-  font-family: 'Inter', sans-serif;
-}
-
-.settings-card {
-  background: white;
-  border-radius: 16px;
-  padding: 48px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 100%;
-  max-width: 400px;
-}
-
-.title {
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-bottom: 24px;
-  color: #1f2937;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 3px solid #e5e7eb;
-  margin-bottom: 16px;
-}
-
-.file-input {
-  margin-bottom: 16px;
-}
-
-.group-input {
-  width: 100%;
-  padding: 12px;
-  margin: 16px 0;
-  font-size: 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.group-input:focus {
-  border-color: #6366f1;
-}
-
-.actions {
+.group-settings {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #6a82fb 0%, #fc5c7d 100%);
+  font-family: "Inter", "Roboto", Arial, sans-serif;
+  color: #22223b;
+  padding-top: 60px;
 }
 
-.btn {
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 500;
+.group-settings-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.12);
+}
+
+.group-settings-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  padding: 48px 40px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(80, 80, 120, 0.18);
+  min-width: 340px;
+  max-width: 95vw;
+}
+
+.group-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin-bottom: 18px;
+  object-fit: cover;
+  border: 4px solid #6a82fb;
+  box-shadow: 0 2px 12px rgba(106,130,251,0.18);
+  background: #f3f3f3;
+}
+
+input[type="file"] {
+  margin-bottom: 12px;
   font-size: 1rem;
+  color: #444;
+}
+
+.upload-button {
+  background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%);
+  color: #fff;
   border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 18px;
+  margin-top: 2px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background 0.2s;
+}
+.upload-button:hover {
+  background: linear-gradient(90deg, #fc5c7d 0%, #6a82fb 100%);
 }
 
-.btn.primary {
-  background-color: #6366f1;
-  color: white;
+.group-name {
+  font-size: 1.1rem;
+  padding: 12px;
+  border: 1.5px solid #d1d1e0;
+  border-radius: 10px;
+  text-align: center;
+  width: 260px;
+  margin-bottom: 24px;
+  background: #f7f7fa;
+  color: #22223b;
+  transition: border 0.2s;
+}
+.group-name:focus {
+  border: 1.5px solid #6a82fb;
+  outline: none;
 }
 
-.btn.primary:hover {
-  background-color: #4f46e5;
+.button-group {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
 }
 
-.btn.secondary {
-  background-color: #4b5563;
-  color: white;
+button {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(106,130,251,0.07);
 }
 
-.btn.secondary:hover {
-  background-color: #374151;
+.save-button {
+  background: linear-gradient(90deg, #21005d 0%, #6a82fb 100%);
+  color: #fff;
+}
+.save-button:hover {
+  background: linear-gradient(90deg, #6a82fb 0%, #21005d 100%);
 }
 
-.btn.info {
-  background-color: #0ea5e9;
-  color: white;
+.add-user-button {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+}
+.add-user-button:hover {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
 }
 
-.btn.info:hover {
-  background-color: #0284c7;
+.leave-button {
+  background: linear-gradient(90deg, #ff5858 0%, #f09819 100%);
+  color: #fff;
 }
-
-.btn.danger {
-  background-color: #ef4444;
-  color: white;
+.leave-button:hover {
+  background: linear-gradient(90deg, #f09819 0%, #ff5858 100%);
 }
-
-.btn.danger:hover {
-  background-color: #dc2626;
-}
-
 </style>

@@ -1,32 +1,23 @@
 <template>
-  <div class="form-wrapper">
-    <div class="form-card">
-      <h2 class="form-title">Create a Group</h2>
+  <div class="container">
+    <div class="input-group">
+      <label for="groupname">Groupname:</label>
+      <input type="text" id="groupname" v-model="groupname" placeholder="Enter group name">
+      <label for="members">Add Members:</label>
 
-      <div class="form-group">
-        <label for="groupname">Group Name</label>
-        <input id="groupname" v-model="groupname" type="text" placeholder="Enter group name">
+      <div class="add-members">
+        <input type="text" id="members" v-model="newMember" placeholder="Enter an username">
+        <button @click="addMember"> Add </button>
       </div>
 
-      <div class="form-group">
-        <label for="members">Add Members</label>
-        <div class="add-members">
-          <input id="members" v-model="newMember" type="text" placeholder="Enter a username">
-          <button class="btn" @click="addMember">Add</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Added Members</label>
-        <div class="member-list">
-          <span v-for="(member, index) in addedMembers" :key="index" class="member-tag">{{ member }}</span>
-        </div>
-      </div>
+      <label for="memberlist">Added Members:</label>
+      <p id="memberlist" v-for="(member, index) in addedMembers" :key="index">
+        {{ member }}
+      </p>
 
       <ErrorMsg v-if="errorMessage" :message="errorMessage" />
-
-      <button class="btn create-btn" @click="createGroup">Create Group</button>
     </div>
+    <button @click="createGroup">Create</button>
   </div>
 </template>
 
@@ -89,95 +80,91 @@ export default {
 </script>
 
 <style scoped>
-.form-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f9fafb;
-  font-family: 'Inter', sans-serif;
-}
-
-.form-card {
-  background: white;
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-}
-
-.form-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 24px;
-  text-align: center;
-  color: #1f2937;
-}
-
-.form-group {
-  margin-bottom: 16px;
+.container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 40px 32px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-label {
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-  color: #374151;
-}
-
-input {
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  outline: none;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-input:focus {
-  border-color: #3b82f6;
+.input-group {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
 }
 
 .add-members {
   display: flex;
-  gap: 10px;
+  flex-direction: row;
+  gap: 12px;
   align-items: center;
 }
 
-.member-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+label {
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 2px;
+  letter-spacing: 0.01em;
 }
 
-.member-tag {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+input {
+  padding: 10px 14px;
+  width: 100%;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border 0.2s;
+  background: #fafbfc;
+  outline: none;
 }
 
-.btn {
-  padding: 10px 16px;
-  background-color: #3b82f6;
-  color: white;
+input:focus {
+  border: 1.5px solid #4f8cff;
+  background: #fff;
+}
+
+button {
+  padding: 10px 24px;
+  background: linear-gradient(90deg, #4f8cff 0%, #38d39f 100%);
+  color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+  transition: background 0.2s, transform 0.1s;
 }
 
-.btn:hover {
-  background-color: #2563eb;
+button:hover {
+  background: linear-gradient(90deg, #38d39f 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.03);
 }
 
-.create-btn {
-  width: 100%;
-  margin-top: 20px;
+#memberlist {
+  background: #f1f6fa;
+  color: #333;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin: 2px 0;
+  font-size: 15px;
+  box-shadow: 0 1px 3px rgba(79,140,255,0.04);
 }
 
+.error-message {
+  color: #e74c3c;
+  font-size: 15px;
+  margin-top: 6px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
 </style>

@@ -1,86 +1,46 @@
 <template>
   <div class="outgoing-message">
-    <!-- Forwarded Label -->
+
+    <!-- Forwarded -->
     <div v-if="isForwarded" class="forwarded">Forwarded Message</div>
 
-    <!-- Photo or Text Message -->
+    <!-- Photo display -->
     <div v-if="isPhoto">
-      <img :src="content" alt="Sent Photo" class="message-photo">
+      <img :src="content" alt="Sent Photo" class="message-photo" />
     </div>
     <span v-else class="content">{{ content }}</span>
 
-    <!-- Timestamp & Status (✔ / ✔✔) -->
+    <!-- Message Status and Timestamp -->
     <div class="message-status">
       <span class="timestamp">{{ formatTime(timestamp) }}</span>
-      <span class="status">
-        <template v-if="fullyRead">✔✔</template>
-        <template v-else-if="fullyReceived">✔</template>
-      </span>
+      <span v-if="fullyRead" class="status">✔✔</span>
+      <span v-else-if="fullyReceived" class="status">✔</span>
     </div>
 
-    <!-- Reaction Trigger Button -->
-    <button class="reaction-button" @click="toggleReactionPopup">+</button>
+    <!-- Reaction Button -->
+    <button @click="toggleReactionPopup" class="reaction-button">+</button>
 
-    <!-- Display Reactions -->
+    <!-- Reactions Display -->
     <div class="reactions">
       <div v-for="(reaction, index) in reactions" :key="index">
-        <span>{{ reaction.reactor }}:</span> <span>{{ reaction.content }}</span>
+        <span>{{ reaction.reactor }}: </span><span>{{ reaction.content }}</span>
       </div>
     </div>
 
-    <!-- Emoji Popup -->
+    <!-- Emoji Selection Popup -->
     <div v-if="isReacting" class="reaction-popup">
       <button @click="addReaction(':D')">:D</button>
       <button @click="addReaction('D:')">D:</button>
       <button @click="addReaction(':|')">:|</button>
-      <button @click="addReaction(':O')">:O</button>
     </div>
+
+
   </div>
 </template>
 
-
 <script>
 export default {
-  props: {
-    content: {
-      type: String,
-      required: true
-    },
-    timestamp: {
-      type: [String, Number, Date],
-      required: true
-    },
-    isPhoto: {
-      type: Boolean,
-      required: true
-    },
-    isForwarded: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    reactions: {
-      type: Array,
-      required: false,
-      default: () => []
-    },
-    fullyReceived: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    fullyRead: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    username: {
-      type: String,
-      required: false,
-      default: ""
-    }
-  },
-  emits: ["reaction-added"],
+  props: ["content", "timestamp", "isPhoto", "isForwarded", "reactions", "fullyReceived", "fullyRead", "username"],
   data() {
     return {
       isReacting: false,  // Flag to toggle the emoji popup visibility
@@ -117,85 +77,123 @@ export default {
 
 <style scoped>
 .outgoing-message {
-  background: #d6c5f0;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: right;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 18px 48px; /* Increased padding for a bigger box */
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(80, 80, 160, 0.10);
+  text-align: left;
   position: relative;
-  margin-left: auto;
-  max-width: 80%;
+  margin-bottom: 24px;
+  transition: box-shadow 0.2s;
+  min-width: 340px;   /* Minimum width for bigger messages */
+  max-width: 820px;   /* Maximum width for large images */
 }
 
 .message-photo {
-  max-width: 100%;
-  border-radius: 10px;
+  max-width: 200%;
+  max-height: 380px;   /* Allow taller images */
+  border-radius: 16px;
+  margin: 48px 0;
+  box-shadow: 0 2px 12px rgba(80, 80, 160, 0.13);
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
+
 
 .forwarded {
   font-size: 12px;
-  color: gray;
+  color: #8a8a8a;
+  margin-bottom: 6px;
+  font-style: italic;
+  letter-spacing: 0.02em;
 }
 
 .content {
-  font-size: 16px;
   display: inline-block;
-  word-wrap: break-word;
-  max-width: 100%;
+  font-size: 16px;
+  color: #232323;
+  margin-bottom: 6px;
+  word-break: break-word;
 }
 
 .message-status {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #555;
-  margin-top: 4px;
+  gap: 8px;
+  font-size: 13px;
+  color: #7a7a7a;
+  margin-top: 6px;
+  justify-content: flex-end;
 }
 
 .status {
-  font-weight: bold;
-  color: green;
+  font-weight: 600;
+  color: #4caf50;
+  font-size: 15px;
 }
 
 .reactions {
-  margin-top: 5px;
-  font-size: 14px;
-  text-align: left;
+  margin-top: 8px;
+  font-size: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reactions > div {
+  background: #f3f3fa;
+  border-radius: 12px;
+  padding: 2px 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(80, 80, 120, 0.04);
 }
 
 .reaction-button {
-  background-color: #005047;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #8ec5fc 0%, #e0c3fc 100%);
+  color: #232323;
+  padding: 6px 14px;
+  border-radius: 50%;
   cursor: pointer;
   border: none;
-  margin-top: 5px;
+  font-size: 20px;
+  position: absolute;
+  bottom: 10px;
+  left: -36px;
+  box-shadow: 0 2px 8px rgba(80, 80, 120, 0.10);
+  transition: background 0.2s;
+}
+
+.reaction-button:hover {
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
 }
 
 .reaction-popup {
   position: absolute;
-  bottom: 50px;
+  bottom: 60px;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  padding: 12px 16px;
   display: flex;
-  gap: 10px;
+  gap: 16px;
+  box-shadow: 0 6px 24px rgba(80, 80, 120, 0.12);
   z-index: 10;
 }
 
 .reaction-popup button {
   background-color: transparent;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+  padding: 4px 8px;
 }
 
 .reaction-popup button:hover {
-  color: #005047;
+  color: #4f46e5;
+  transform: scale(1.2);
 }
 </style>
-

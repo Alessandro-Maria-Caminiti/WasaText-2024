@@ -1,29 +1,22 @@
 <template>
-  <div class="profile-wrapper">
+  <div class="profile-settings">
+    <h1 class="profile-title">Profile</h1>
     <div class="profile-card">
-      <h1 class="profile-title">Profile Settings</h1>
+      <!-- Profilbild -->
+      <img class="profile-avatar" :src="profilePhotoURL" alt="User Avatar" />
 
-      <img class="profile-avatar" :src="profilePhotoURL" alt="User Avatar">
+      <!-- Datei-Upload für das Profilbild -->
+      <input type="file" @change="handleFileUpload" accept="image/*" />
+      <button class="upload-button" @click="uploadProfilePicture">Upload Picture</button>
 
-      <input type="file" accept="image/*" @change="handleFileUpload">
-      <button class="primary-button" @click="uploadProfilePicture">Upload Picture</button>
-
-      <input
-        v-model="username"
-        type="text"
-        class="profile-input"
-        placeholder="Enter username"
-      >
-
+      <input type="text" class="profile-name" v-model="username" placeholder="Enter username" />
       <ErrorMsg v-if="errorMsg" :message="errorMsg" />
-
       <div class="button-group">
-        <button class="primary-button" @click="saveProfile">Save</button>
+        <button class="save-button" @click="saveProfile">Save</button>
       </div>
     </div>
   </div>
 </template>
-
 
 <script>
 import axios from "@/services/axios";
@@ -38,11 +31,6 @@ export default {
       errorMsg: "",
       imageFile: null
     };
-  },
-    mounted() {
-
-    this.fetchUser();
-
   },
   methods: {
     async fetchUser() {
@@ -128,74 +116,119 @@ export default {
     },
 
   },
+
+  mounted() {
+
+    this.fetchUser();
+
+  },
 };
 </script>
-
 <style scoped>
-.profile-wrapper {
+.profile-settings {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 100vh;
-  background-color: #f3f4f6;
-  font-family: 'Inter', sans-serif;
-}
-
-.profile-card {
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 420px;
-  text-align: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #6a82fb 0%, #fc5c7d 100%);
+  font-family: 'Inter', 'Roboto', Arial, sans-serif;
+  color: #222;
+  padding-top: 60px;
 }
 
 .profile-title {
-  font-size: 1.8rem;
-  margin-bottom: 24px;
-  color: #111827;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.profile-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  padding: 48px 40px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(80, 80, 120, 0.18);
+  min-width: 340px;
+  max-width: 95vw;
 }
 
 .profile-avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   object-fit: cover;
+  border: 4px solid #6a82fb;
+  box-shadow: 0 2px 12px rgba(106,130,251,0.12);
+  background: #f0f0f0;
 }
 
 input[type="file"] {
-  margin-bottom: 12px;
-}
-
-.profile-input {
+  margin-bottom: 10px;
   font-size: 1rem;
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.primary-button {
-  background-color: #6366f1;
-  color: white;
+  color: #444;
+  background: none;
   border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.primary-button:hover {
-  background-color: #4f46e5;
+.profile-name {
+  font-size: 1.2rem;
+  padding: 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  text-align: center;
+  width: 260px;
+  margin-bottom: 18px;
+  background: #f7f8fa;
+  transition: border 0.2s;
+}
+
+.profile-name:focus {
+  border: 1.5px solid #6a82fb;
+  outline: none;
+  background: #fff;
+}
+
+.upload-button, .save-button {
+  margin-top: 10px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(106,130,251,0.10);
+  transition: background 0.2s, transform 0.1s;
+}
+
+.upload-button:hover, .save-button:hover {
+  background: linear-gradient(90deg, #fc5c7d 0%, #6a82fb 100%);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .button-group {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+@media (max-width: 500px) {
+  .profile-card {
+    padding: 24px 10px 20px 10px;
+    min-width: unset;
+    width: 98vw;
+  }
+  .profile-name {
+    width: 90vw;
+    font-size: 1rem;
+  }
 }
 </style>

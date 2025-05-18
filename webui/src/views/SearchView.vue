@@ -1,27 +1,12 @@
 <template>
   <div class="search-container">
     <h1 class="title">Choose User</h1>
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Search..."
-      class="search-bar"
-      @input="onSearch"
-    >
-
+    <input v-model="searchQuery" type="text" placeholder="Search..." class="search-bar" @input="fetchUsers" />
     <div class="user-list">
-      <template v-if="filteredUsers.length">
-        <UserCard
-          v-for="user in filteredUsers"
-          :key="user.username"
-          :user="user"
-        />
-      </template>
-      <p v-else class="no-results">No users found.</p>
+      <UserCard v-for="user in filteredUsers" :key="user.username" :user="user" />
     </div>
   </div>
 </template>
-
 
 <script>
 import axios from "@/services/axios";
@@ -31,20 +16,17 @@ export default {
   components: {
     UserCard,
   },
+  computed: {
+    filteredUsers() {
+      return this.users.filter(user => user.username !== sessionStorage.getItem("currentUser"));
+    }
+  },
   data() {
     return {
       searchQuery: "",
       users: [],
     };
   },
-  computed: {
-    filteredUsers() {
-      return this.users.filter(user => user.username !== sessionStorage.getItem("currentUser"));
-    }
-  },
-  mounted() {
-    this.fetchUsers();
-  },  
   methods: {
     async fetchUsers() {
       try {
@@ -57,49 +39,61 @@ export default {
       }
     },
   },
+  mounted() {
+    this.fetchUsers();
+  },
 };
 </script>
 
 <style scoped>
 .search-container {
   text-align: center;
-  background-color: #f3f4f6;
-  height: 100vh;
+  background: linear-gradient(135deg, #6a82fb 0%, #fc5c7d 100%);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 40px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
 .title {
-  font-size: 2rem;
-  color: #111827;
-  margin-bottom: 20px;
+  font-size: 2.5rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 
 .search-bar {
-  width: 80%;
+  width: 100%;
   max-width: 400px;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 14px 18px;
+  font-size: 1.1rem;
+  border-radius: 16px;
+  border: none;
+  margin: 0 0 24px 0;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  outline: none;
+  transition: box-shadow 0.2s;
+  background: #fff;
+}
+
+.search-bar:focus {
+  box-shadow: 0 4px 24px rgba(108, 99, 255, 0.18);
 }
 
 .user-list {
-  width: 80%;
+  width: 100%;
   max-width: 500px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.no-results {
-  color: #6b7280;
-  font-style: italic;
-  margin-top: 20px;
+  gap: 18px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 18px;
+  padding: 24px 18px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  backdrop-filter: blur(2px);
 }
 </style>

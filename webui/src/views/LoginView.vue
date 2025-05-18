@@ -1,19 +1,14 @@
 <template>
-  <div class="login-wrapper">
-    <div class="login-card">
-      <h1>Login</h1>
-      <input
-        v-model="username"
-        class="login-input"
-        type="text"
-        placeholder="Enter your username"
-      >
-      <button class="login-button" @click="login">Login</button>
-      <p v-if="error" class="error-message">{{ error }}</p>
-    </div>
+  <div class="login-container">
+    <h1>Login</h1>
+    <!-- Input field for the username -->
+    <input v-model="username" placeholder="Enter your username" />
+    <!-- Button to trigger the login function -->
+    <button @click="login">Login</button>
+    <!-- Display an error message if there is an error -->
+    <p v-if="error" class="error">{{ error }}</p>
   </div>
 </template>
-
 
 <script>
 import axios from "@/services/axios"; // Import the Axios instance for making HTTP requests
@@ -70,67 +65,72 @@ export default {
 </script>
 
 <style scoped>
-.login-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f9fafb;
-  font-family: 'Inter', sans-serif;
-}
-
-.login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 360px;
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 2.5rem 2rem 2rem 2rem;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
   text-align: center;
+  transition: box-shadow 0.2s;
 }
 
-.login-card h1 {
-  font-size: 1.8rem;
-  margin-bottom: 24px;
-  color: #111827;
+.login-container h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #22223b;
+  letter-spacing: 1px;
 }
 
-.login-input {
+input {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 16px;
-  font-size: 1rem;
-  border: 1px solid #d1d5db;
+  padding: 12px 14px;
+  margin: 12px 0;
+  border: 1.5px solid #e0e1dd;
   border-radius: 8px;
+  background: #f8f9fa;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
   outline: none;
-  transition: border 0.2s ease;
 }
 
-.login-input:focus {
-  border-color: #6366f1;
+input:focus {
+  border: 1.5px solid #4f8cff;
+  box-shadow: 0 0 0 2px #e3f0ff;
+  background: #fff;
 }
 
-.login-button {
+button {
   width: 100%;
   padding: 12px;
-  background-color: #6366f1;
-  color: white;
-  font-weight: 500;
+  background: linear-gradient(90deg, #4f8cff 0%, #4361ee 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(79, 140, 255, 0.08);
+  transition: background 0.2s, transform 0.1s;
 }
 
-.login-button:hover {
-  background-color: #4f46e5;
+button:hover {
+  background: linear-gradient(90deg, #4361ee 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.02);
 }
 
-.error-message {
-  margin-top: 12px;
-  color: #ef4444;
-  font-size: 0.95rem;
+.error {
+  color: #e63946;
+  background: #ffeaea;
+  border-radius: 6px;
+  padding: 8px 0;
+  margin-top: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 4px rgba(230, 57, 70, 0.06);
 }
-
 </style>
