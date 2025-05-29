@@ -8,12 +8,6 @@ import (
 func (rt *_router) Handler() http.Handler {
 	// | Unprotected Routes |
 
-	// Register routes
-	rt.router.GET("/", rt.getHelloWorld)
-	rt.router.GET("/context", rt.wrap(rt.getContextReply))
-
-	// Special routes
-	rt.router.GET("/liveness", rt.liveness)
 
 	// Image serving route
 	rt.router.ServeFiles("/uploads/*filepath", http.Dir("./uploads")) // make images publicly accessable
@@ -30,9 +24,9 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users", rt.wrapWithAuth(rt.searchUsers))
 
 	// User Profile
-	rt.router.PUT("/user-profile", rt.wrapWithAuth(rt.changeUsername))
-	rt.router.GET("/user-profile", rt.wrapWithAuth(rt.listConversations))
-	rt.router.PUT("/profile-picture", rt.wrapWithAuth(rt.changeProfilePicture))
+	rt.router.PUT("/user_profile", rt.wrapWithAuth(rt.changeUsername))
+	rt.router.GET("/user_profile", rt.wrapWithAuth(rt.listConversations))
+	rt.router.PUT("/profile_picture", rt.wrapWithAuth(rt.changeProfilePicture))
 
 	// Conversation
 	rt.router.GET("/conversations/:partner-username", rt.wrapWithAuth(rt.showConversation))
@@ -48,7 +42,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/groups", rt.wrapWithAuth(rt.addToGroup))
 	rt.router.PUT("/groups/:groupname", rt.wrapWithAuth(rt.changeGroupName))
 	rt.router.DELETE("/groups/:groupname", rt.wrapWithAuth(rt.leaveGroup))
-	rt.router.PUT("/groups/:groupname/group-photo", rt.wrapWithAuth(rt.changeGroupPicture))
+	rt.router.PUT("/groups/:groupname/group_photo", rt.wrapWithAuth(rt.changeGroupPicture))
 
 	return rt.router
 }
