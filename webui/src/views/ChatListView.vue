@@ -52,7 +52,7 @@ export default {
   methods: {
     async fetchConversations() {
       try {
-        const response = await axios.get("/user-profile");
+        const response = await axios.get("/user_profile");
         const newConversations = response.data || [];
 
         // Only reloads if there is new data

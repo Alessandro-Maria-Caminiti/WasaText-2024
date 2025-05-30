@@ -68,7 +68,7 @@ this.fetchUser();
     async saveProfile() {
       try {
         this.errorMsg = "";
-        const response = await axios.put("/user-profile", { newusername: this.username });
+        const response = await axios.put("/user_profile", { newusername: this.username });
         
         if (response.data.message === 'username successfully changed') {
           alert('Username updated successfully!');
@@ -110,7 +110,7 @@ this.fetchUser();
 
     async changeProfilePicture(newPhotoURL) {
       try {
-        const response = await axios.put('/profile-picture', { photo_url: newPhotoURL });
+        const response = await axios.put('/profile_picture', { photo_url: newPhotoURL });
         if (response.data.message === 'profile picture successfully updated') {
           this.profilePhotoURL = newPhotoURL;
           alert('Profile picture updated!');

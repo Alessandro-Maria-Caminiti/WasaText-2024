@@ -1923,13 +1923,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-bin-setup@npm:^1.0.0":
-  version: 1.1.4
-  resolution: "node-bin-setup@npm:1.1.4"
-  checksum: 10/41a2b1fdaef42294c7f5352af834413b7ad0dd7af7be424caa7db7cc0b2f6bfc0a01ea69ba56e5b083553c99ca4f2d660fc10ff1f7d222499b4703368b2c69f3
-  languageName: node
-  linkType: hard
-
 "node-gyp@npm:latest":
   version: 11.2.0
   resolution: "node-gyp@npm:11.2.0"
@@ -1947,17 +1940,6 @@ __metadata:
   bin:
     node-gyp: bin/node-gyp.js
   checksum: 10/806fd8e3adc9157e17bf0d4a2c899cf6b98a0bbe9f453f630094ce791866271f6cddcaf2133e6513715d934fcba2014d287c7053d5d7934937b3a34d5a3d84ad
-  languageName: node
-  linkType: hard
-
-"node@npm:^20.19.2":
-  version: 20.19.2
-  resolution: "node@npm:20.19.2"
-  dependencies:
-    node-bin-setup: "npm:^1.0.0"
-  bin:
-    node: bin/node
-  checksum: 10/951408a2826141d300e4d96b804a8cd8d044bc58b79c8c7f7d1005600631c2cb64b1fb19523e0de371e3abc1fe3cd1dc9645fdf09e0d86995bffb5b1d0263970
   languageName: node
   linkType: hard
 
@@ -2413,7 +2395,6 @@ __metadata:
     axios: "npm:^1.9.0"
     eslint: "npm:^9.2.0"
     eslint-plugin-vue: "npm:^9.25.0"
-    node: "npm:^20.19.2"
     vite: "npm:^6.3.5"
     vue: "npm:^3.2.37"
     vue-router: "npm:^4.1.3"
