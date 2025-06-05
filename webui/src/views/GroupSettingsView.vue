@@ -92,7 +92,7 @@ export default {
       try {
         await axios.delete(`/groups/${this.groupname}`);
         alert("You have left the group.");
-        this.$router.push("/home");
+        this.$router.push("/chats");
       } catch (error) {
         console.error("Error leaving group:", error);
         alert("Failed to leave group.");
