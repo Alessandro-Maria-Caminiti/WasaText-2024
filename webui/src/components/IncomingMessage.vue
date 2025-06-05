@@ -27,6 +27,17 @@
       <button @click="addReaction('D:')">D:</button>
       <button @click="addReaction(':|')">:|</button>    
     </div>
+      <div>
+    <!-- Optional: Add a button to forward messages -->
+    <button @click="handleforward(msg.message_id, $route.query.username)">
+      Forward Message
+    </button>
+  </div>
+  <div>
+    <button @click="handleDelete(msg.message_id)">
+      Delete Message
+      </button>
+  </div>
   </div>
 </template>
 
@@ -88,6 +99,35 @@ export default {
       if (!timestamp) return "";
       return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     },
+        async handleDelete(messageId) {
+      try {
+        await axios.delete(`/conversations/messages/${messageId}`);
+        this.messages = this.messages.filter(msg => msg.message_id !== messageId);
+      } catch (error) {
+        console.error("Error deleting message:", error);
+      }
+    },
+    async handleforward(messageId, partnerUsername) {
+      try {
+        const message = this.messages.find(msg => msg.message_id === messageId);
+        if (!message) {
+          console.error(`Message with ID ${messageId} not found!`);
+          return;
+        }
+
+        const forwardData = {
+          content: message.content,
+          is_photo: message.is_photo,
+          is_forwarded: true,
+        };
+
+        await axios.post(`/conversations/${partnerUsername}/messages/${messageId}`, forwardData);
+        this.fetchMessages();
+      } catch (error) {
+        console.error("Error forwarding message:", error);
+      }
+    },
+
   }
 };
 </script>
@@ -222,5 +262,36 @@ export default {
   color: #7b2ff2;
   background: #f3e8ff;
   transform: scale(1.15);
+}
+.forward-button,
+.delete-button {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  border: none;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-right: 10px;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.forward-button:hover {
+  background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.18);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.delete-button {
+  background: linear-gradient(135deg, #ff5858 0%, #f09819 100%);
+  box-shadow: 0 2px 8px rgba(255, 88, 88, 0.10);
+}
+
+.delete-button:hover {
+  background: linear-gradient(135deg, #f09819 0%, #ff5858 100%);
+  box-shadow: 0 4px 16px rgba(255, 88, 88, 0.18);
+  transform: translateY(-2px) scale(1.05);
 }
 </style>

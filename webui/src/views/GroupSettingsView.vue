@@ -57,8 +57,8 @@ export default {
         });
 
         const imageUrl = uploadResponse.data.imageUrl;
-
-        await axios.put(`/groups/${this.groupname}/photo`, { photo_url: imageUrl });
+        console.log("Image uploaded successfully:", imageUrl);
+        await axios.put(`/groups/${this.groupname}/group_photo`, {newPhotoURL: imageUrl });
 
         this.groupPhotoURL = imageUrl;
         alert("Group photo updated!");
@@ -69,7 +69,7 @@ export default {
     },
     async saveGroupName() {
       try {
-        await axios.put(`/groups/${this.groupname}/rename`, { newname: this.groupname });
+        await axios.put(`/groups/${this.groupname}`, { NewGroupName: this.groupname });
         alert("Group name updated!");
       } catch (error) {
         console.error("Error updating group name:", error);
@@ -80,7 +80,7 @@ export default {
       const newUser = prompt("Enter username to add:");
       if (!newUser) return;
       try {
-        await axios.post(`/groups/${this.groupname}/add-user`, { username: newUser });
+        await axios.post(`/groups/${this.groupname}`, { Name: newUser });
         alert(`${newUser} added to the group!`);
       } catch (error) {
         console.error("Error adding user to group:", error);
@@ -90,7 +90,7 @@ export default {
     async leaveGroup() {
       if (!confirm("Are you sure you want to leave this group?")) return;
       try {
-        await axios.post(`/groups/${this.groupname}/leave`);
+        await axios.delete(`/groups/${this.groupname}`);
         alert("You have left the group.");
         this.$router.push("/home");
       } catch (error) {

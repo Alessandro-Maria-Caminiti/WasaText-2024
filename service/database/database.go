@@ -64,6 +64,7 @@ type AppDatabase interface {
 
 	// Group Functions
 	AddToGroup(groupname string, usernames []string, currentUser string) error
+	AddUserToGroup(groupname string, username string) error
 	ChangeGroupPicture(groupName string, newPhotoURL string) error
 	ChangeGroupName(oldGroupName string, newGroupName string) error
 	LeaveGroup(groupName string, currentUser string) error

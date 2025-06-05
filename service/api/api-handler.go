@@ -6,8 +6,14 @@ import (
 
 // Handler returns an instance of httprouter.Router that handle APIs registered here
 func (rt *_router) Handler() http.Handler {
-	// | Unprotected Routes |
+	// Register routes
+	rt.router.GET("/", rt.getHelloWorld)
+	rt.router.GET("/context", rt.wrap(rt.getContextReply))
 
+	// Special routes
+	rt.router.GET("/liveness", rt.liveness)
+
+	// | Unprotected Routes |
 
 	// Image serving route
 	rt.router.ServeFiles("/uploads/*filepath", http.Dir("./uploads")) // make images publicly accessable
@@ -40,6 +46,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// Groups
 	rt.router.POST("/groups", rt.wrapWithAuth(rt.addToGroup))
+	rt.router.POST("/groups/:groupname", rt.wrapWithAuth(rt.addUserToGroup)) // also used to create a group
 	rt.router.PUT("/groups/:groupname", rt.wrapWithAuth(rt.changeGroupName))
 	rt.router.DELETE("/groups/:groupname", rt.wrapWithAuth(rt.leaveGroup))
 	rt.router.PUT("/groups/:groupname/group_photo", rt.wrapWithAuth(rt.changeGroupPicture))

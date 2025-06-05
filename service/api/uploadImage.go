@@ -29,6 +29,7 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	// Get the file from the form data
+
 	file, handler, err := r.FormFile("image")
 	if err != nil {
 		http.Error(w, `{"error": "Unable to retrieve file from form."}`, http.StatusBadRequest)
