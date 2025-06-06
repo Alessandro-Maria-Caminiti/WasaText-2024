@@ -1,0 +1,131 @@
+### Hello World
+GET http://localhost:3000/
+
+### Liveness
+GET http://localhost:3000/liveness
+
+### Login
+POST http://localhost:3000/session
+Content-Type: application/json
+
+{
+    "username": "testuser"
+}
+
+### Upload Image (replace <token> and path)
+POST http://localhost:3000/upload
+Authorization: Bearer 633020010
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/test.jpg
+--boundary--
+
+### Search Users (replace <token>)
+GET http://localhost:3000/users
+Authorization: Bearer 633020010
+
+### Get User Profile (replace <token>)
+GET http://localhost:3000/user_profile
+Authorization: Bearer 633020010
+
+### Change Username (replace <token>)
+PUT http://localhost:3000/user_profile
+Authorization: Bearer 633020010
+Content-Type: application/json
+
+{
+    "NewUsername": "newusername"
+}
+
+### Change Profile Picture (replace <token> and path)
+PUT http://localhost:3000/profile_picture
+Authorization: Bearer 633020010
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/test.jpg
+--boundary--
+
+### Show Conversation (replace <token> and <partner-username>)
+GET http://localhost:3000/conversations/<partner-username>
+Authorization: Bearer 633020010
+
+### Send Message (replace <token> and <partner-username>)
+POST http://localhost:3000/conversations/<partner-username>
+Authorization: Bearer 633020010
+Content-Type: application/json
+
+{
+    "message": "Hello!"
+}
+
+### Forward Message (replace <token>, <partner-username>, <message-id>)
+POST http://localhost:3000/conversations/<partner-username>/messages/1
+Authorization: Bearer 633020010
+Content-Type: application/json
+    
+    {
+        "RecipientUsername" : "Pino",
+    }
+
+### Delete Message (replace <token> and <message-id>)
+DELETE http://localhost:3000/conversations/messages/<message-id>
+Authorization: Bearer 633020010
+
+### Make Comment (replace <token> and <message-id>)
+PUT http://localhost:3000/conversations/messages/<message-id>/comment
+Authorization: Bearer 633020010
+Content-Type: application/json
+
+{
+    "comment": "Nice message!"
+}
+
+### Delete Comment (replace <token> and <message-id>)
+DELETE http://localhost:3000/conversations/messages/<message-id>/comment
+Authorization: Bearer 633020010
+
+### Add to Group (replace <token>)
+POST http://localhost:3000/groups
+Authorization: Bearer 633020010
+Content-Type: application/json
+
+{
+    "groupname": "newgroup",
+    "members": ["user1", "user2"]
+}
+
+### Change Group Name (replace <token> and <groupname>)
+PUT http://localhost:3000/groups/<groupname>
+Authorization: Bearer 633020010
+Content-Type: application/json
+
+{
+    "groupname": "updatedgroup"
+}
+
+### Leave Group (replace <token> and <groupname>)
+DELETE http://localhost:3000/groups/<groupname>
+Authorization: Bearer 633020010
+
+### Change Group Picture (replace <token> and <groupname>)
+PUT http://localhost:3000/groups/<groupname>/group_photo
+Authorization: Bearer 633020010
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="group.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/group.jpg
+--boundary--
+
+### Serve Uploaded Images
+GET http://localhost:3000/uploads/<filepath>
