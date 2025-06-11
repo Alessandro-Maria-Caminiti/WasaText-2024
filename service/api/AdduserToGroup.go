@@ -12,13 +12,14 @@ import (
 
 // Request structure for adding users to a group
 type AddUserToGroupRequest struct {
-	Name     string `json:"name"`
+	Name string `json:"name"`
 }
+
 // addUserToGroup handles the HTTP request to add a user to a group
 func (rt *_router) addUserToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Set response content type
 	w.Header().Set("Content-Type", "application/json")
-		// Get old groupname from Path parameter
+	// Get old groupname from Path parameter
 	GroupName := ps.ByName("groupname")
 	if GroupName == "" {
 		http.Error(w, `{"error": "missing groupname parameter"}`, http.StatusBadRequest)
@@ -37,19 +38,18 @@ func (rt *_router) addUserToGroup(w http.ResponseWriter, r *http.Request, ps htt
 		http.Error(w, `{"error": "at least one user must be written"}`, http.StatusBadRequest)
 		return
 	}
-		_, err = rt.db.GetUser(req.Name)
-		if err != nil {
-			// Check if error is "user not found"
-			if errors.Is(err, database.ErrUserNotFound) {
-				http.Error(w, `{"error": "User '`+req.Name+`' does not exist"}`, http.StatusBadRequest)
-				return
-			}
-			log.Print("other database error")
-			// if different error
-			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+	_, err = rt.db.GetUser(req.Name)
+	if err != nil {
+		// Check if error is "user not found"
+		if errors.Is(err, database.ErrUserNotFound) {
+			http.Error(w, `{"error": "User '`+req.Name+`' does not exist"}`, http.StatusBadRequest)
 			return
 		}
-	
+		log.Print("other database error")
+		// if different error
+		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+		return
+	}
 
 	// Add users to group in database
 	err = rt.db.AddUserToGroup(GroupName, req.Name)

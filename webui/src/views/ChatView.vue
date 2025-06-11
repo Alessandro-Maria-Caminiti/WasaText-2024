@@ -4,7 +4,7 @@
     <h1 class="chat-title">{{ $route.query.username }}</h1>
 
     <!-- Group Settings Button (nur wenn es eine Gruppe ist) -->
-    <div v-if="$route.query.isGroup">
+    <div v-if="$route.query.isGroup == 'true'">
       <button class="group-settings-button" @click="goToGroupSettings">
         Group Settings
       </button>

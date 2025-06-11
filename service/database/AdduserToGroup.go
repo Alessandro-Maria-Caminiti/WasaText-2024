@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 )
+
 // AddToGroup adds a user to a group in the database.
 // It first checks if the group name already exists as a username, and if so, returns an error.
 
@@ -36,7 +37,7 @@ func (db *appdbimpl) AddUserToGroup(groupname string, username string) error {
 	}
 
 	if userAlreadyMember > 0 {
-		return fmt.Errorf("user is already a member: %w", err)	// Skip adding the user if they are already a member
+		return fmt.Errorf("user is already a member: %w", err) // Skip adding the user if they are already a member
 	}
 
 	// Add the user to the group

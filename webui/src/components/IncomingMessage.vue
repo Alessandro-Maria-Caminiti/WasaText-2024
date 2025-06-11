@@ -27,17 +27,7 @@
       <button @click="addReaction('D:')">D:</button>
       <button @click="addReaction(':|')">:|</button>    
     </div>
-      <div>
-    <!-- Optional: Add a button to forward messages -->
-    <button @click="handleforward(msg.message_id, $route.query.username)">
-      Forward Message
-    </button>
-  </div>
-  <div>
-    <button @click="handleDelete(msg.message_id)">
-      Delete Message
-      </button>
-  </div>
+
   </div>
 </template>
 
@@ -98,34 +88,6 @@ export default {
     formatTime(timestamp) {
       if (!timestamp) return "";
       return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    },
-        async handleDelete(messageId) {
-      try {
-        await axios.delete(`/conversations/messages/${messageId}`);
-        this.messages = this.messages.filter(msg => msg.message_id !== messageId);
-      } catch (error) {
-        console.error("Error deleting message:", error);
-      }
-    },
-    async handleforward(messageId, partnerUsername) {
-      try {
-        const message = this.messages.find(msg => msg.message_id === messageId);
-        if (!message) {
-          console.error(`Message with ID ${messageId} not found!`);
-          return;
-        }
-
-        const forwardData = {
-          content: message.content,
-          is_photo: message.is_photo,
-          is_forwarded: true,
-        };
-
-        await axios.post(`/conversations/${partnerUsername}/messages/${messageId}`, forwardData);
-        this.fetchMessages();
-      } catch (error) {
-        console.error("Error forwarding message:", error);
-      }
     },
 
   }
